@@ -1,0 +1,102 @@
+:root {
+  /* Glavne boje teme */
+  --primary-color: #003049;
+  --primary-dark: #5a6fd8;
+  --secondary-color: #764ba2;
+  --accent-color: #667eea;
+
+  /* Pozadinske boje */
+  --bg-primary: #669bbc;
+  --bg-secondary: #ffffff;
+  --bg-canvas: #fafafa;
+
+  /* Tekst boje */
+  --text-header: #fdf0d5;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-light: #999999;
+
+  /* Border i shadow boje */
+  --border-color: #dddddd;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+
+  /* Element boje */
+  --node-color: #0066cc;
+  --node-selected: #ff0000;
+  --grid-color: rgba(128, 128, 128, 0.3);
+
+  /* Hover efekti */
+  --hover-opacity: 0.8;
+  --transition-speed: 0.3s;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+header {
+  background: var(--primary-color);
+  color: white;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+header h1 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+  color: var(--text-header);
+}
+
+header p {
+  font-size: 1rem;
+  opacity: var(--hover-opacity);
+}
+
+.canvas-container {
+  background: var(--bg-secondary);
+  border-radius: 10px;
+  box-shadow: 0 2px 4px var(--shadow-color);
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#mainCanvas {
+  border: 2px solid var(--border-color);
+  border-radius: 5px;
+  cursor: crosshair;
+  background-color: var(--bg-canvas);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .container {
+    padding: 10px;
+  }
+
+  header h1 {
+    font-size: 1.5rem;
+  }
+
+  #mainCanvas {
+    max-width: 100%;
+    height: auto;
+  }
+}
