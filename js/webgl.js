@@ -1,5 +1,3 @@
-// Jednostavan WebGL renderer za 2D Resetka aplikaciju
-
 class SimpleRenderer {
   constructor(canvas) {
     this.canvas = canvas;
@@ -18,7 +16,7 @@ class SimpleRenderer {
   }
 
   initShaders() {
-    // Jednostavan vertex shader
+    // Vertex shader
     const vertexShaderSource = `
             attribute vec2 a_position;
             uniform vec2 u_resolution;
@@ -29,7 +27,7 @@ class SimpleRenderer {
             }
         `;
 
-    // Jednostavan fragment shader
+    // Fragment shader
     const fragmentShaderSource = `
             precision mediump float;
             uniform vec4 u_color;
@@ -204,5 +202,53 @@ class SimpleRenderer {
       x: screenX - rect.left,
       y: screenY - rect.top,
     };
+  }
+
+  // Za zadavanje snapa — vraća najbliže koordinate preseka mreže
+  snapToGrid(x, y, step = 50) {
+    const sx = Math.round(x / step) * step;
+    const sy = Math.round(y / step) * step;
+    return { x: sx, y: sy };
+  }
+
+  // Iscrtavanje malog kružića oko tačke (popunjen krug)
+  drawCircle(x, y, radius = 6, color = [0, 0, 1, 1], segments = 24) {
+    const vertices = [];
+    // Centar
+    vertices.push(x, y);
+    // Obruč
+    for (let i = 0; i <= segments; i++) {
+      const theta = (i / segments) * Math.PI * 2;
+      const vx = x + Math.cos(theta) * radius;
+      const vy = y + Math.sin(theta) * radius;
+      vertices.push(vx, vy);
+    }
+
+    this.gl.useProgram(this.program);
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.positionBuffer);
+    this.gl.bufferData(
+      this.gl.ARRAY_BUFFER,
+      new Float32Array(vertices),
+      this.gl.STATIC_DRAW
+    );
+
+    this.gl.enableVertexAttribArray(this.positionLocation);
+    this.gl.vertexAttribPointer(
+      this.positionLocation,
+      2,
+      this.gl.FLOAT,
+      false,
+      0,
+      0
+    );
+
+    this.gl.uniform2f(
+      this.resolutionLocation,
+      this.canvas.width,
+      this.canvas.height
+    );
+    this.gl.uniform4f(this.colorLocation, ...color);
+
+    this.gl.drawArrays(this.gl.TRIANGLE_FAN, 0, vertices.length / 2);
   }
 }

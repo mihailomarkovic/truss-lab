@@ -20,7 +20,9 @@ class SimpleTrussApp {
     // Klik na canvas
     this.canvas.addEventListener("click", (e) => {
       const worldPos = this.renderer.screenToWorld(e.clientX, e.clientY);
-      this.addNode(worldPos.x, worldPos.y);
+      const snapped = this.renderer.snapToGrid(worldPos.x, worldPos.y, 50);
+      this.addNode(snapped.x, snapped.y);
+      this.updateStatus(snapped.x, snapped.y);
     });
 
     // Resize prozora
@@ -43,6 +45,13 @@ class SimpleTrussApp {
     console.log("Ukupno čvorova:", this.nodes.length);
   }
 
+  updateStatus(x, y) {
+    const el = document.getElementById("coordText");
+    if (el) {
+      el.textContent = `Koordinate: (${x.toFixed(0)}, ${y.toFixed(0)})`;
+    }
+  }
+
   render() {
     this.renderer.clear();
 
@@ -51,7 +60,7 @@ class SimpleTrussApp {
 
     // Crtaj sve čvorove
     for (const node of this.nodes) {
-      this.renderer.drawPoints([node.x, node.y], [0, 0, 1, 1], 8);
+      this.renderer.drawCircle(node.x, node.y, 6, [0, 0, 1, 1], 24);
     }
   }
 
