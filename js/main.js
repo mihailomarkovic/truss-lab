@@ -8,11 +8,16 @@ class SimpleTrussApp {
     // Lista čvorova
     this.nodes = [];
 
+    // Aktivni alat
+    this.activeTool = "node"; // node | beam | support | force
+
     this.init();
   }
 
   init() {
     this.setupEventListeners();
+    this.setupToolButtons();
+    this.setupResetButton();
     this.render();
   }
 
@@ -21,14 +26,84 @@ class SimpleTrussApp {
     this.canvas.addEventListener("click", (e) => {
       const worldPos = this.renderer.screenToWorld(e.clientX, e.clientY);
       const snapped = this.renderer.snapToGrid(worldPos.x, worldPos.y, 50);
-      this.addNode(snapped.x, snapped.y);
-      this.updateStatus(snapped.x, snapped.y);
+      if (this.activeTool === "node") {
+        this.addNode(snapped.x, snapped.y);
+        this.updateStatus(snapped.x, snapped.y);
+      } else {
+        // Za sada samo obavesti koji je alat izabran
+        const el = document.getElementById("coordText");
+        if (el)
+          el.textContent = `Alat: ${this.labelForTool(
+            this.activeTool
+          )} | Klik: (${snapped.x.toFixed(0)}, ${snapped.y.toFixed(0)})`;
+      }
     });
 
     // Resize prozora
     window.addEventListener("resize", () => {
       this.handleResize();
     });
+  }
+
+  setupToolButtons() {
+    const buttons = document.querySelectorAll(".tool-btn");
+    buttons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const tool = btn.getAttribute("data-tool");
+        if (!tool) return;
+        this.activeTool = tool;
+        // UI aktivno stanje
+        buttons.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        const el = document.getElementById("coordText");
+        if (el)
+          el.textContent = `Alat: ${this.labelForTool(tool)} | Koordinate: —`;
+      });
+    });
+
+    const defaultBtn = document.querySelector('.tool-btn[data-tool="node"]');
+    if (defaultBtn) defaultBtn.classList.add("active");
+  }
+
+  setupResetButton() {
+    const resetBtn = document.getElementById("resetBtn");
+    if (resetBtn) {
+      resetBtn.addEventListener("click", () => {
+        this.resetCanvas();
+      });
+    }
+  }
+
+  resetCanvas() {
+    // Obriši sve čvorove
+    this.nodes = [];
+
+    // Ponovo renderuj (samo mreža će ostati)
+    this.render();
+
+    // Resetuj status
+    const el = document.getElementById("coordText");
+    if (el) {
+      el.textContent = "Koordinate: —";
+    }
+
+    console.log("Canvas je resetovan");
+  }
+
+  labelForTool(tool) {
+    switch (tool) {
+      case "node":
+        return "Čvor";
+      case "beam":
+        return "Štap";
+      case "support":
+        return "Oslonac";
+      case "force":
+        return "Sila";
+      default:
+        return tool;
+    }
   }
 
   addNode(x, y) {

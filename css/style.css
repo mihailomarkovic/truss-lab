@@ -43,7 +43,7 @@ body {
 }
 
 .container {
-  max-width: 900px;
+  max-width: 1100px;
   margin: 0 auto;
   padding: 20px;
 }
@@ -76,6 +76,74 @@ header p {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 16px;
+}
+
+.sidebar {
+  background: var(--bg-secondary);
+  border-radius: 10px;
+  box-shadow: 0 2px 4px var(--shadow-color);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tool-btn {
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  background: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background var(--transition-speed),
+    transform var(--transition-speed), box-shadow var(--transition-speed);
+  text-align: left;
+}
+
+.tool-btn:hover {
+  background: #f5f7ff;
+}
+
+.tool-btn.active {
+  background: #e9efff;
+  border-color: var(--primary-dark);
+  box-shadow: 0 0 0 2px rgba(90, 111, 216, 0.2) inset;
+}
+
+.reset-btn {
+  padding: 10px 12px;
+  border: 1px solid #dc3545;
+  background: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background var(--transition-speed),
+    transform var(--transition-speed), box-shadow var(--transition-speed);
+  text-align: center;
+  color: #dc3545;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.reset-btn:hover {
+  background: #f8d7da;
+  transform: translateY(-1px);
+}
+
+.reset-btn:active {
+  transform: translateY(0);
+}
+
+.status-bar {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
 }
 
 #mainCanvas {

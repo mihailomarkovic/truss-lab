@@ -12,8 +12,17 @@
         <h1>TrussLab</h1>
       </header>
 
-      <div class="canvas-container">
-        <canvas id="mainCanvas" width="800" height="600"></canvas>
+      <div class="workspace">
+        <aside class="sidebar">
+          <button class="tool-btn" data-tool="node">Čvor</button>
+          <button class="tool-btn" data-tool="beam">Štap</button>
+          <button class="tool-btn" data-tool="support">Oslonac</button>
+          <button class="tool-btn" data-tool="force">Sila</button>
+          <button class="reset-btn" id="resetBtn">Reset</button>
+        </aside>
+        <div class="canvas-container">
+          <canvas id="mainCanvas" width="800" height="600"></canvas>
+        </div>
       </div>
       <footer id="statusBar" class="status-bar">
         <span id="coordText">Koordinate: —</span>
