@@ -251,4 +251,75 @@ class SimpleRenderer {
 
     this.gl.drawArrays(this.gl.TRIANGLE_FAN, 0, vertices.length / 2);
   }
+
+  // Crtanje linije između dve tačke
+  drawLine(x1, y1, x2, y2, color = [0, 0, 0, 1], width = 1) {
+    const vertices = [x1, y1, x2, y2];
+
+    this.gl.useProgram(this.program);
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.positionBuffer);
+    this.gl.bufferData(
+      this.gl.ARRAY_BUFFER,
+      new Float32Array(vertices),
+      this.gl.STATIC_DRAW
+    );
+
+    this.gl.enableVertexAttribArray(this.positionLocation);
+    this.gl.vertexAttribPointer(
+      this.positionLocation,
+      2,
+      this.gl.FLOAT,
+      false,
+      0,
+      0
+    );
+
+    this.gl.uniform2f(
+      this.resolutionLocation,
+      this.canvas.width,
+      this.canvas.height
+    );
+    this.gl.uniform4f(this.colorLocation, ...color);
+
+    this.gl.drawArrays(this.gl.LINES, 0, 2);
+  }
+
+  // Crtanje trougla (za oslonce)
+  drawTriangle(x, y, size = 8, color = [1, 0, 0, 1]) {
+    const vertices = [
+      x,
+      y - size, // Vrh trougla
+      x - size,
+      y + size, // Levo dno
+      x + size,
+      y + size, // Desno dno
+    ];
+
+    this.gl.useProgram(this.program);
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.positionBuffer);
+    this.gl.bufferData(
+      this.gl.ARRAY_BUFFER,
+      new Float32Array(vertices),
+      this.gl.STATIC_DRAW
+    );
+
+    this.gl.enableVertexAttribArray(this.positionLocation);
+    this.gl.vertexAttribPointer(
+      this.positionLocation,
+      2,
+      this.gl.FLOAT,
+      false,
+      0,
+      0
+    );
+
+    this.gl.uniform2f(
+      this.resolutionLocation,
+      this.canvas.width,
+      this.canvas.height
+    );
+    this.gl.uniform4f(this.colorLocation, ...color);
+
+    this.gl.drawArrays(this.gl.TRIANGLES, 0, 3);
+  }
 }

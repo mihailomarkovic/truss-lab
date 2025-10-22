@@ -7,9 +7,14 @@ class SimpleTrussApp {
 
     // Lista čvorova
     this.nodes = [];
+    // Lista štapova
+    this.beams = [];
 
     // Aktivni alat
     this.activeTool = "node"; // node | beam | support | force
+
+    // Stanje za izbor čvorova za štapove
+    this.selectedNodeForBeam = null;
 
     this.init();
   }
@@ -29,13 +34,17 @@ class SimpleTrussApp {
       if (this.activeTool === "node") {
         this.addNode(snapped.x, snapped.y);
         this.updateStatus(snapped.x, snapped.y);
+      } else if (this.activeTool === "beam") {
+        this.handleBeamClick(snapped.x, snapped.y);
+      } else if (this.activeTool === "support") {
+        this.handleSupportClick(snapped.x, snapped.y);
       } else {
         // Za sada samo obavesti koji je alat izabran
         const el = document.getElementById("coordText");
         if (el)
           el.textContent = `Alat: ${this.labelForTool(
             this.activeTool
-          )} | Klik: (${snapped.x.toFixed(0)}, ${snapped.y.toFixed(0)})`;
+          )} | Klik: x: ${snapped.x.toFixed(0)}, y: ${snapped.y.toFixed(0)}`;
       }
     });
 
@@ -76,8 +85,10 @@ class SimpleTrussApp {
   }
 
   resetCanvas() {
-    // Obriši sve čvorove
+    // Obriši sve čvorove i štapove
     this.nodes = [];
+    this.beams = [];
+    this.selectedNodeForBeam = null;
 
     // Ponovo renderuj (samo mreža će ostati)
     this.render();
@@ -111,6 +122,7 @@ class SimpleTrussApp {
       id: this.nodes.length + 1,
       x: x,
       y: y,
+      type: "node", // node | support
     };
 
     this.nodes.push(node);
@@ -120,10 +132,98 @@ class SimpleTrussApp {
     console.log("Ukupno čvorova:", this.nodes.length);
   }
 
+  // Pronađi čvor na datoj poziciji (sa tolerancijom)
+  findNodeAt(x, y, tolerance = 15) {
+    for (const node of this.nodes) {
+      const dx = node.x - x;
+      const dy = node.y - y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      if (distance <= tolerance) {
+        return node;
+      }
+    }
+    return null;
+  }
+
+  // Rukovanje klikom za štap
+  handleBeamClick(x, y) {
+    const clickedNode = this.findNodeAt(x, y);
+
+    if (!clickedNode) {
+      // Klik van čvora - resetuj izbor
+      this.selectedNodeForBeam = null;
+      const el = document.getElementById("coordText");
+      if (el) el.textContent = "Alat: Štap | Izaberite prvi čvor";
+      return;
+    }
+
+    if (!this.selectedNodeForBeam) {
+      // Prvi čvor izabran
+      this.selectedNodeForBeam = clickedNode;
+      const el = document.getElementById("coordText");
+      if (el)
+        el.textContent = `Alat: Štap | Prvi čvor: ${clickedNode.id} | Izaberite drugi čvor`;
+    } else if (this.selectedNodeForBeam.id !== clickedNode.id) {
+      // Drugi čvor izabran - napravi štap
+      this.addBeam(this.selectedNodeForBeam, clickedNode);
+      this.selectedNodeForBeam = null; // Resetuj izbor za sledeći štap
+      const el = document.getElementById("coordText");
+      if (el)
+        el.textContent = `Alat: Štap | Štap kreiran | Izaberite prvi čvor za sledeći štap`;
+    }
+  }
+
+  // Dodaj štap između dva čvora
+  addBeam(node1, node2) {
+    // Proveri da li štap već postoji
+    const existingBeam = this.beams.find(
+      (beam) =>
+        (beam.from.id === node1.id && beam.to.id === node2.id) ||
+        (beam.from.id === node2.id && beam.to.id === node1.id)
+    );
+
+    if (existingBeam) {
+      console.log("Štap već postoji između ovih čvorova");
+      return;
+    }
+
+    const beam = {
+      id: this.beams.length + 1,
+      from: node1,
+      to: node2,
+    };
+
+    this.beams.push(beam);
+    this.render();
+
+    console.log("Dodat štap:", beam);
+  }
+
+  // Rukovanje klikom za oslonac
+  handleSupportClick(x, y) {
+    const clickedNode = this.findNodeAt(x, y);
+
+    if (clickedNode) {
+      // Pretvori čvor u oslonac
+      clickedNode.type = "support";
+      this.render();
+
+      const el = document.getElementById("coordText");
+      if (el) el.textContent = `Čvor ${clickedNode.id} pretvoren u oslonac`;
+
+      console.log(`Čvor ${clickedNode.id} pretvoren u oslonac`);
+    } else {
+      const el = document.getElementById("coordText");
+      if (el)
+        el.textContent =
+          "Alat: Oslonac | Kliknite na čvor da ga pretvorite u oslonac";
+    }
+  }
+
   updateStatus(x, y) {
     const el = document.getElementById("coordText");
     if (el) {
-      el.textContent = `Koordinate: (${x.toFixed(0)}, ${y.toFixed(0)})`;
+      el.textContent = `Koordinate: x: ${x.toFixed(0)}, y: ${y.toFixed(0)}`;
     }
   }
 
@@ -133,9 +233,27 @@ class SimpleTrussApp {
     // Crtaj mrežu
     this.renderer.drawGrid();
 
+    // Crtaj sve štapove
+    for (const beam of this.beams) {
+      this.renderer.drawLine(
+        beam.from.x,
+        beam.from.y,
+        beam.to.x,
+        beam.to.y,
+        [0.2, 0.2, 0.2, 1],
+        2
+      );
+    }
+
     // Crtaj sve čvorove
     for (const node of this.nodes) {
-      this.renderer.drawCircle(node.x, node.y, 6, [0, 0, 1, 1], 24);
+      if (node.type === "support") {
+        // Crtaj oslonac kao trougao
+        this.renderer.drawTriangle(node.x, node.y, 8, [1, 0, 0, 1]);
+      } else {
+        // Crtaj običan čvor kao krug
+        this.renderer.drawCircle(node.x, node.y, 6, [0, 0, 1, 1], 24);
+      }
     }
   }
 
@@ -152,7 +270,7 @@ class SimpleTrussApp {
 document.addEventListener("DOMContentLoaded", () => {
   try {
     const app = new SimpleTrussApp();
-    console.log("Jednostavna 2D Resetka aplikacija je uspešno pokrenuta!");
+    console.log("TrussLab aplikacija je uspešno pokrenuta!");
   } catch (error) {
     console.error("Greška pri pokretanju aplikacije:", error);
     alert(
