@@ -76,17 +76,31 @@ class SimpleTrussApp {
             submenu.style.display =
               submenu.style.display === "none" ? "flex" : "none";
           }
-          // Ne postavi aktivni alat dok korisnik ne izabere tip oslonca
+
+          // Aktiviraj dugme "Oslonac"
+          buttons.forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+
+          // Resetuj tip oslonca kad se otvori podmeni
+          this.supportType = null;
+          this.supportAngle = 0;
+
+          // Resetuj aktivne dugmiće u podmeniju
+          const halfBtns = document.querySelectorAll(".half-btn");
+          halfBtns.forEach((b) => b.classList.remove("active"));
+
+          const angleBtns = document.querySelectorAll(".angle-btn");
+          angleBtns.forEach((b) => b.classList.remove("active"));
+
+          const el = document.getElementById("coordText");
+          if (el) el.textContent = "Alat: Oslonac | Izaberite tip i ugao";
+
           return;
         }
 
         // Sakrij support podmeni ako je izabran drugi alat
         const submenu = document.getElementById("supportSubmenu");
         if (submenu) submenu.style.display = "none";
-
-        // Sakrij angle podmeni ako je izabran drugi alat
-        const angleSubmenu = document.getElementById("angleSubmenu");
-        if (angleSubmenu) angleSubmenu.style.display = "none";
 
         this.activeTool = tool;
         this.supportType = null; // Resetuj tip oslonca
@@ -107,8 +121,8 @@ class SimpleTrussApp {
   }
 
   setupSupportSubmenu() {
-    const submenuBtns = document.querySelectorAll(".submenu-btn");
-    submenuBtns.forEach((btn) => {
+    const halfBtns = document.querySelectorAll(".half-btn");
+    halfBtns.forEach((btn) => {
       btn.addEventListener("click", () => {
         const supportType = btn.getAttribute("data-support-type");
         if (!supportType) return;
@@ -125,20 +139,13 @@ class SimpleTrussApp {
         if (supportBtn) supportBtn.classList.add("active");
 
         // Aktiviraj kliknuti tip u podmeniju
-        submenuBtns.forEach((b) => b.classList.remove("active"));
+        halfBtns.forEach((b) => b.classList.remove("active"));
         btn.classList.add("active");
-
-        // Sakrij support podmeni i prikaži angle podmeni
-        const submenu = document.getElementById("supportSubmenu");
-        if (submenu) submenu.style.display = "none";
-
-        const angleSubmenu = document.getElementById("angleSubmenu");
-        if (angleSubmenu) angleSubmenu.style.display = "flex";
 
         const el = document.getElementById("coordText");
         if (el) {
           const typeLabel = supportType === "fixed" ? "Nepokretan" : "Pokretan";
-          el.textContent = `Alat: Oslonac (${typeLabel}) | Izaberite ugao`;
+          el.textContent = `Alat: Oslonac (${typeLabel}) | Ugao: ${this.supportAngle}° | Kliknite na čvor`;
         }
       });
     });
