@@ -19,6 +19,9 @@ class SimpleTrussApp {
     // Trenutni tip oslonca koji se postavlja
     this.supportType = null; // null | "fixed" | "movable"
 
+    // Trenutni ugao oslonca
+    this.supportAngle = 0; // 0 | 90 | 180 | 270
+
     this.init();
   }
 
@@ -27,6 +30,7 @@ class SimpleTrussApp {
     this.setupToolButtons();
     this.setupResetButton();
     this.setupSupportSubmenu();
+    this.setupAngleSubmenu();
     this.render();
   }
 
@@ -80,8 +84,13 @@ class SimpleTrussApp {
         const submenu = document.getElementById("supportSubmenu");
         if (submenu) submenu.style.display = "none";
 
+        // Sakrij angle podmeni ako je izabran drugi alat
+        const angleSubmenu = document.getElementById("angleSubmenu");
+        if (angleSubmenu) angleSubmenu.style.display = "none";
+
         this.activeTool = tool;
         this.supportType = null; // Resetuj tip oslonca
+        this.supportAngle = 0; // Resetuj ugao
 
         // UI aktivno stanje
         buttons.forEach((b) => b.classList.remove("active"));
@@ -119,10 +128,40 @@ class SimpleTrussApp {
         submenuBtns.forEach((b) => b.classList.remove("active"));
         btn.classList.add("active");
 
+        // Sakrij support podmeni i prikaži angle podmeni
+        const submenu = document.getElementById("supportSubmenu");
+        if (submenu) submenu.style.display = "none";
+
+        const angleSubmenu = document.getElementById("angleSubmenu");
+        if (angleSubmenu) angleSubmenu.style.display = "flex";
+
         const el = document.getElementById("coordText");
         if (el) {
           const typeLabel = supportType === "fixed" ? "Nepokretan" : "Pokretan";
-          el.textContent = `Alat: Oslonac (${typeLabel}) | Kliknite na čvor`;
+          el.textContent = `Alat: Oslonac (${typeLabel}) | Izaberite ugao`;
+        }
+      });
+    });
+  }
+
+  setupAngleSubmenu() {
+    const angleBtns = document.querySelectorAll(".angle-btn");
+    angleBtns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const angle = parseInt(btn.getAttribute("data-angle"));
+        if (isNaN(angle)) return;
+
+        this.supportAngle = angle;
+
+        // Aktiviraj kliknuti ugao u podmeniju
+        angleBtns.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        const el = document.getElementById("coordText");
+        if (el) {
+          const typeLabel =
+            this.supportType === "fixed" ? "Nepokretan" : "Pokretan";
+          el.textContent = `Alat: Oslonac (${typeLabel}) | Ugao: ${angle}° | Kliknite na čvor`;
         }
       });
     });
@@ -268,21 +307,24 @@ class SimpleTrussApp {
     if (clickedNode) {
       // Pretvori čvor u oslonac odgovarajućeg tipa
       clickedNode.type = `support_${this.supportType}`;
+      clickedNode.angle = this.supportAngle; // Dodaj ugao čvoru
       this.render();
 
       const el = document.getElementById("coordText");
       const typeLabel =
         this.supportType === "fixed" ? "nepokretan" : "pokretan";
       if (el)
-        el.textContent = `Čvor ${clickedNode.id} pretvoren u ${typeLabel} oslonac`;
+        el.textContent = `Čvor ${clickedNode.id} pretvoren u ${typeLabel} oslonac (${this.supportAngle}°)`;
 
-      console.log(`Čvor ${clickedNode.id} pretvoren u ${typeLabel} oslonac`);
+      console.log(
+        `Čvor ${clickedNode.id} pretvoren u ${typeLabel} oslonac pod uglom ${this.supportAngle}°`
+      );
     } else {
       const el = document.getElementById("coordText");
       if (el) {
         const typeLabel =
           this.supportType === "fixed" ? "Nepokretan" : "Pokretan";
-        el.textContent = `Alat: Oslonac (${typeLabel}) | Kliknite na čvor`;
+        el.textContent = `Alat: Oslonac (${typeLabel}) | Ugao: ${this.supportAngle}° | Kliknite na čvor`;
       }
     }
   }
@@ -307,8 +349,8 @@ class SimpleTrussApp {
         beam.from.y,
         beam.to.x,
         beam.to.y,
-        [0.2, 0.2, 0.2, 1],
-        2
+        [0.11, 0.08, 0.06, 1], // shadcn stone-900
+        4 // Zadebljane linije
       );
     }
 
@@ -316,13 +358,15 @@ class SimpleTrussApp {
     for (const node of this.nodes) {
       if (node.type === "support_fixed") {
         // Crtaj nepokretan oslonac (trougao + krug)
-        this.renderer.drawFixedSupport(node.x, node.y);
+        const angle = node.angle || 0;
+        this.renderer.drawFixedSupport(node.x, node.y, angle);
       } else if (node.type === "support_movable") {
         // Crtaj pokretan oslonac (trougao + krug + linija)
-        this.renderer.drawMovableSupport(node.x, node.y);
+        const angle = node.angle || 0;
+        this.renderer.drawMovableSupport(node.x, node.y, angle);
       } else {
         // Crtaj običan čvor kao krug
-        this.renderer.drawCircle(node.x, node.y, 6, [0, 0, 1, 1], 24);
+        this.renderer.drawCircle(node.x, node.y, 6, [0.11, 0.08, 0.06, 1], 24); // shadcn stone-900
       }
     }
   }

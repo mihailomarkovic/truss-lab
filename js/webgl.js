@@ -101,14 +101,14 @@ class SimpleRenderer {
 
   setupViewport() {
     this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
-    this.gl.clearColor(0.95, 0.95, 0.95, 1.0);
+    this.gl.clearColor(0.96, 0.96, 0.95, 1.0); // shadcn stone-100
   }
 
   clear() {
     this.gl.clear(this.gl.COLOR_BUFFER_BIT);
   }
 
-  drawPoints(vertices, color = [0, 0, 1, 1], size = 8) {
+  drawPoints(vertices, color = [0, 0, 1, 1], size = 10) {
     this.gl.useProgram(this.program);
 
     // Postavi pozicije
@@ -190,7 +190,7 @@ class SimpleRenderer {
         this.canvas.width,
         this.canvas.height
       );
-      this.gl.uniform4f(this.colorLocation, 0.8, 0.8, 0.8, 0.5);
+      this.gl.uniform4f(this.colorLocation, 0.66, 0.64, 0.62, 0.5); // shadcn stone-400
 
       this.gl.drawArrays(this.gl.LINES, 0, lines.length / 2);
     }
@@ -323,13 +323,34 @@ class SimpleRenderer {
     this.gl.drawArrays(this.gl.TRIANGLES, 0, 3);
   }
 
+  // Funkcija za rotaciju tačke oko centra (suprotno od kazaljke na satu)
+  rotatePoint(x, y, centerX, centerY, angleDegrees) {
+    const angleRad = (-angleDegrees * Math.PI) / 180; // Negativan ugao za suprotno od kazaljke
+    const cos = Math.cos(angleRad);
+    const sin = Math.sin(angleRad);
+
+    // Translacija u centar
+    const dx = x - centerX;
+    const dy = y - centerY;
+
+    // Rotacija
+    const rotatedX = dx * cos - dy * sin;
+    const rotatedY = dx * sin + dy * cos;
+
+    // Translacija nazad
+    return {
+      x: rotatedX + centerX,
+      y: rotatedY + centerY,
+    };
+  }
+
   // Crtanje nepokretnog oslonca (trougao + krug na vrhu)
-  drawFixedSupport(x, y) {
-    const size = 8;
+  drawFixedSupport(x, y, angle = 0) {
+    const size = 8 * 1.3; // Povećano za 1.3x
     const triangleHeight = size * 1.5; // Visina trougla
 
-    // Crtaj trougao - vrh na poziciji čvora
-    const triangleVertices = [
+    // Definiši trougao bez rotacije (vrh na poziciji čvora)
+    let triangleVertices = [
       x,
       y, // Vrh trougla na poziciji čvora
       x - size,
@@ -337,6 +358,22 @@ class SimpleRenderer {
       x + size,
       y + triangleHeight, // Desno dno
     ];
+
+    // Rotuj trougao oko vrha ako je angle != 0
+    if (angle !== 0) {
+      const rotated = [];
+      for (let i = 0; i < triangleVertices.length; i += 2) {
+        const rotatedPoint = this.rotatePoint(
+          triangleVertices[i],
+          triangleVertices[i + 1],
+          x, // Centar rotacije je vrh trougla
+          y,
+          angle
+        );
+        rotated.push(rotatedPoint.x, rotatedPoint.y);
+      }
+      triangleVertices = rotated;
+    }
 
     this.gl.useProgram(this.program);
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.positionBuffer);
@@ -361,20 +398,20 @@ class SimpleRenderer {
       this.canvas.width,
       this.canvas.height
     );
-    this.gl.uniform4f(this.colorLocation, 1, 0, 0, 1);
+    this.gl.uniform4f(this.colorLocation, 0.8, 0.2, 0.2, 1); // shadcn red-600
     this.gl.drawArrays(this.gl.TRIANGLES, 0, 3);
 
     // Crtaj krug na vrhu trougla (na poziciji čvora)
-    this.drawCircle(x, y, 4, [1, 0, 0, 1], 16);
+    this.drawCircle(x, y, 4, [0.8, 0.2, 0.2, 1], 16); // shadcn red-600
   }
 
   // Crtanje pokretnog oslonca (trougao + krug + linija ispod)
-  drawMovableSupport(x, y) {
-    const size = 8;
+  drawMovableSupport(x, y, angle = 0) {
+    const size = 8 * 1.3; // Povećano za 1.3x
     const triangleHeight = size * 1.5; // Visina trougla
 
-    // Crtaj trougao - vrh na poziciji čvora
-    const triangleVertices = [
+    // Definiši trougao bez rotacije (vrh na poziciji čvora)
+    let triangleVertices = [
       x,
       y, // Vrh trougla na poziciji čvora
       x - size,
@@ -382,6 +419,22 @@ class SimpleRenderer {
       x + size,
       y + triangleHeight, // Desno dno
     ];
+
+    // Rotuj trougao oko vrha ako je angle != 0
+    if (angle !== 0) {
+      const rotated = [];
+      for (let i = 0; i < triangleVertices.length; i += 2) {
+        const rotatedPoint = this.rotatePoint(
+          triangleVertices[i],
+          triangleVertices[i + 1],
+          x, // Centar rotacije je vrh trougla
+          y,
+          angle
+        );
+        rotated.push(rotatedPoint.x, rotatedPoint.y);
+      }
+      triangleVertices = rotated;
+    }
 
     this.gl.useProgram(this.program);
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.positionBuffer);
@@ -406,22 +459,45 @@ class SimpleRenderer {
       this.canvas.width,
       this.canvas.height
     );
-    this.gl.uniform4f(this.colorLocation, 1, 0, 0, 1);
+    this.gl.uniform4f(this.colorLocation, 0.8, 0.2, 0.2, 1); // shadcn red-600
     this.gl.drawArrays(this.gl.TRIANGLES, 0, 3);
 
     // Crtaj krug na vrhu trougla (na poziciji čvora)
-    this.drawCircle(x, y, 4, [1, 0, 0, 1], 16);
+    this.drawCircle(x, y, 4, [0.8, 0.2, 0.2, 1], 16); // shadcn red-600
 
     // Crtaj horizontalnu liniju ispod trougla
     const lineY = y + triangleHeight + 4; // Malo ispod donje stranice trougla
     const lineLength = size * 1.5;
+
+    // Definiši liniju bez rotacije
+    let lineStartX = x - lineLength;
+    let lineStartY = lineY;
+    let lineEndX = x + lineLength;
+    let lineEndY = lineY;
+
+    // Rotuj liniju ako je angle != 0
+    if (angle !== 0) {
+      const rotatedStart = this.rotatePoint(
+        lineStartX,
+        lineStartY,
+        x,
+        y,
+        angle
+      );
+      const rotatedEnd = this.rotatePoint(lineEndX, lineEndY, x, y, angle);
+      lineStartX = rotatedStart.x;
+      lineStartY = rotatedStart.y;
+      lineEndX = rotatedEnd.x;
+      lineEndY = rotatedEnd.y;
+    }
+
     this.drawLine(
-      x - lineLength,
-      lineY,
-      x + lineLength,
-      lineY,
-      [1, 0, 0, 1],
+      lineStartX,
+      lineStartY,
+      lineEndX,
+      lineEndY,
+      [0.8, 0.2, 0.2, 1],
       2
-    );
+    ); // shadcn red-600
   }
 }
