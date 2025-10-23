@@ -503,8 +503,8 @@ class SimpleRenderer {
 
   // Crtanje strelice za silu
   drawForceArrow(x, y, angle, intensity) {
-    const arrowLength = 30; // Dužina strelice
-    const arrowHeadSize = 8; // Veličina vrha strelice
+    const arrowLength = 50; // Dužina strelice = dužina jedne ivice kvadrata mreže
+    const arrowHeadSize = 12; // Veličina vrha strelice (veća za balans)
 
     // Konvertuj ugao u radijane
     const angleRad = (-angle * Math.PI) / 180; // Negativan za suprotno od kazaljke
@@ -515,8 +515,8 @@ class SimpleRenderer {
     const endX = x + cos * arrowLength;
     const endY = y + sin * arrowLength;
 
-    // Crtaj liniju strelice
-    this.drawLine(x, y, endX, endY, [0.8, 0.2, 0.2, 1], 3); // Crvena
+    // Crtaj liniju strelice (deblja)
+    this.drawLine(x, y, endX, endY, [0.8, 0.2, 0.2, 1], 4); // Crvena, deblja
 
     // Crtaj vrh strelice (trougao)
     const headAngle1 = angleRad + Math.PI * 0.8; // 144° offset

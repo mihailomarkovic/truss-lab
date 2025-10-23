@@ -108,6 +108,14 @@ class SimpleTrussApp {
           const angleBtns = document.querySelectorAll(".angle-btn");
           angleBtns.forEach((b) => b.classList.remove("active"));
 
+          // Sakrij force podmeni ako je otvoren
+          const forceSubmenu = document.getElementById("forceSubmenu");
+          if (forceSubmenu) forceSubmenu.style.display = "none";
+
+          // Resetuj aktivne dugmiće u force podmeniju
+          const forceAngleBtns = document.querySelectorAll(".force-angle-btn");
+          forceAngleBtns.forEach((b) => b.classList.remove("active"));
+
           const el = document.getElementById("coordText");
           if (el) el.textContent = "Alat: Oslonac | Izaberite tip i ugao";
 
@@ -136,6 +144,16 @@ class SimpleTrussApp {
           const forceAngleBtns = document.querySelectorAll(".force-angle-btn");
           forceAngleBtns.forEach((b) => b.classList.remove("active"));
 
+          // Sakrij support podmeni ako je otvoren
+          const supportSubmenu = document.getElementById("supportSubmenu");
+          if (supportSubmenu) supportSubmenu.style.display = "none";
+
+          // Resetuj aktivne dugmiće u support podmeniju
+          const halfBtns = document.querySelectorAll(".half-btn");
+          halfBtns.forEach((b) => b.classList.remove("active"));
+          const angleBtns = document.querySelectorAll(".angle-btn");
+          angleBtns.forEach((b) => b.classList.remove("active"));
+
           const el = document.getElementById("coordText");
           if (el)
             el.textContent = `Alat: Sila | Ugao: ${this.forceAngle}° | Intenzitet: ${this.forceIntensity}`;
@@ -147,9 +165,19 @@ class SimpleTrussApp {
         const submenu = document.getElementById("supportSubmenu");
         if (submenu) submenu.style.display = "none";
 
+        // Resetuj aktivne dugmiće u support podmeniju
+        const halfBtns = document.querySelectorAll(".half-btn");
+        halfBtns.forEach((b) => b.classList.remove("active"));
+        const angleBtns = document.querySelectorAll(".angle-btn");
+        angleBtns.forEach((b) => b.classList.remove("active"));
+
         // Sakrij force podmeni ako je izabran drugi alat
         const forceSubmenu = document.getElementById("forceSubmenu");
         if (forceSubmenu) forceSubmenu.style.display = "none";
+
+        // Resetuj aktivne dugmiće u force podmeniju
+        const forceAngleBtns = document.querySelectorAll(".force-angle-btn");
+        forceAngleBtns.forEach((b) => b.classList.remove("active"));
 
         this.activeTool = tool;
         this.supportType = null; // Resetuj tip oslonca
