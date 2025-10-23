@@ -16,6 +16,9 @@ class SimpleTrussApp {
     // Stanje za izbor čvorova za štapove
     this.selectedNodeForBeam = null;
 
+    // Trenutni tip oslonca koji se postavlja
+    this.supportType = null; // null | "fixed" | "movable"
+
     this.init();
   }
 
@@ -23,6 +26,7 @@ class SimpleTrussApp {
     this.setupEventListeners();
     this.setupToolButtons();
     this.setupResetButton();
+    this.setupSupportSubmenu();
     this.render();
   }
 
@@ -60,7 +64,25 @@ class SimpleTrussApp {
       btn.addEventListener("click", () => {
         const tool = btn.getAttribute("data-tool");
         if (!tool) return;
+
+        // Ako je kliknut alat "support", prikaži podmeni
+        if (tool === "support") {
+          const submenu = document.getElementById("supportSubmenu");
+          if (submenu) {
+            submenu.style.display =
+              submenu.style.display === "none" ? "flex" : "none";
+          }
+          // Ne postavi aktivni alat dok korisnik ne izabere tip oslonca
+          return;
+        }
+
+        // Sakrij support podmeni ako je izabran drugi alat
+        const submenu = document.getElementById("supportSubmenu");
+        if (submenu) submenu.style.display = "none";
+
         this.activeTool = tool;
+        this.supportType = null; // Resetuj tip oslonca
+
         // UI aktivno stanje
         buttons.forEach((b) => b.classList.remove("active"));
         btn.classList.add("active");
@@ -73,6 +95,37 @@ class SimpleTrussApp {
 
     const defaultBtn = document.querySelector('.tool-btn[data-tool="node"]');
     if (defaultBtn) defaultBtn.classList.add("active");
+  }
+
+  setupSupportSubmenu() {
+    const submenuBtns = document.querySelectorAll(".submenu-btn");
+    submenuBtns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const supportType = btn.getAttribute("data-support-type");
+        if (!supportType) return;
+
+        this.supportType = supportType;
+        this.activeTool = "support";
+
+        // Aktiviraj aktivni alat
+        const buttons = document.querySelectorAll(".tool-btn");
+        buttons.forEach((b) => b.classList.remove("active"));
+        const supportBtn = document.querySelector(
+          '.tool-btn[data-tool="support"]'
+        );
+        if (supportBtn) supportBtn.classList.add("active");
+
+        // Aktiviraj kliknuti tip u podmeniju
+        submenuBtns.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        const el = document.getElementById("coordText");
+        if (el) {
+          const typeLabel = supportType === "fixed" ? "Nepokretan" : "Pokretan";
+          el.textContent = `Alat: Oslonac (${typeLabel}) | Kliknite na čvor`;
+        }
+      });
+    });
   }
 
   setupResetButton() {
@@ -122,7 +175,7 @@ class SimpleTrussApp {
       id: this.nodes.length + 1,
       x: x,
       y: y,
-      type: "node", // node | support
+      type: "node", // node | support_fixed | support_movable
     };
 
     this.nodes.push(node);
@@ -201,22 +254,36 @@ class SimpleTrussApp {
 
   // Rukovanje klikom za oslonac
   handleSupportClick(x, y) {
-    const clickedNode = this.findNodeAt(x, y);
-
-    if (clickedNode) {
-      // Pretvori čvor u oslonac
-      clickedNode.type = "support";
-      this.render();
-
-      const el = document.getElementById("coordText");
-      if (el) el.textContent = `Čvor ${clickedNode.id} pretvoren u oslonac`;
-
-      console.log(`Čvor ${clickedNode.id} pretvoren u oslonac`);
-    } else {
+    // Proveri da li je tip oslonca izabran
+    if (!this.supportType) {
       const el = document.getElementById("coordText");
       if (el)
         el.textContent =
-          "Alat: Oslonac | Kliknite na čvor da ga pretvorite u oslonac";
+          "Alat: Oslonac | Izaberite tip oslonca (Nepokretan/Pokretan)";
+      return;
+    }
+
+    const clickedNode = this.findNodeAt(x, y);
+
+    if (clickedNode) {
+      // Pretvori čvor u oslonac odgovarajućeg tipa
+      clickedNode.type = `support_${this.supportType}`;
+      this.render();
+
+      const el = document.getElementById("coordText");
+      const typeLabel =
+        this.supportType === "fixed" ? "nepokretan" : "pokretan";
+      if (el)
+        el.textContent = `Čvor ${clickedNode.id} pretvoren u ${typeLabel} oslonac`;
+
+      console.log(`Čvor ${clickedNode.id} pretvoren u ${typeLabel} oslonac`);
+    } else {
+      const el = document.getElementById("coordText");
+      if (el) {
+        const typeLabel =
+          this.supportType === "fixed" ? "Nepokretan" : "Pokretan";
+        el.textContent = `Alat: Oslonac (${typeLabel}) | Kliknite na čvor`;
+      }
     }
   }
 
@@ -247,9 +314,12 @@ class SimpleTrussApp {
 
     // Crtaj sve čvorove
     for (const node of this.nodes) {
-      if (node.type === "support") {
-        // Crtaj oslonac kao trougao
-        this.renderer.drawTriangle(node.x, node.y, 8, [1, 0, 0, 1]);
+      if (node.type === "support_fixed") {
+        // Crtaj nepokretan oslonac (trougao + krug)
+        this.renderer.drawFixedSupport(node.x, node.y);
+      } else if (node.type === "support_movable") {
+        // Crtaj pokretan oslonac (trougao + krug + linija)
+        this.renderer.drawMovableSupport(node.x, node.y);
       } else {
         // Crtaj običan čvor kao krug
         this.renderer.drawCircle(node.x, node.y, 6, [0, 0, 1, 1], 24);

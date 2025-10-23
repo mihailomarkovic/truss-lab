@@ -322,4 +322,106 @@ class SimpleRenderer {
 
     this.gl.drawArrays(this.gl.TRIANGLES, 0, 3);
   }
+
+  // Crtanje nepokretnog oslonca (trougao + krug na vrhu)
+  drawFixedSupport(x, y) {
+    const size = 8;
+    const triangleHeight = size * 1.5; // Visina trougla
+
+    // Crtaj trougao - vrh na poziciji čvora
+    const triangleVertices = [
+      x,
+      y, // Vrh trougla na poziciji čvora
+      x - size,
+      y + triangleHeight, // Levo dno
+      x + size,
+      y + triangleHeight, // Desno dno
+    ];
+
+    this.gl.useProgram(this.program);
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.positionBuffer);
+    this.gl.bufferData(
+      this.gl.ARRAY_BUFFER,
+      new Float32Array(triangleVertices),
+      this.gl.STATIC_DRAW
+    );
+
+    this.gl.enableVertexAttribArray(this.positionLocation);
+    this.gl.vertexAttribPointer(
+      this.positionLocation,
+      2,
+      this.gl.FLOAT,
+      false,
+      0,
+      0
+    );
+
+    this.gl.uniform2f(
+      this.resolutionLocation,
+      this.canvas.width,
+      this.canvas.height
+    );
+    this.gl.uniform4f(this.colorLocation, 1, 0, 0, 1);
+    this.gl.drawArrays(this.gl.TRIANGLES, 0, 3);
+
+    // Crtaj krug na vrhu trougla (na poziciji čvora)
+    this.drawCircle(x, y, 4, [1, 0, 0, 1], 16);
+  }
+
+  // Crtanje pokretnog oslonca (trougao + krug + linija ispod)
+  drawMovableSupport(x, y) {
+    const size = 8;
+    const triangleHeight = size * 1.5; // Visina trougla
+
+    // Crtaj trougao - vrh na poziciji čvora
+    const triangleVertices = [
+      x,
+      y, // Vrh trougla na poziciji čvora
+      x - size,
+      y + triangleHeight, // Levo dno
+      x + size,
+      y + triangleHeight, // Desno dno
+    ];
+
+    this.gl.useProgram(this.program);
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.positionBuffer);
+    this.gl.bufferData(
+      this.gl.ARRAY_BUFFER,
+      new Float32Array(triangleVertices),
+      this.gl.STATIC_DRAW
+    );
+
+    this.gl.enableVertexAttribArray(this.positionLocation);
+    this.gl.vertexAttribPointer(
+      this.positionLocation,
+      2,
+      this.gl.FLOAT,
+      false,
+      0,
+      0
+    );
+
+    this.gl.uniform2f(
+      this.resolutionLocation,
+      this.canvas.width,
+      this.canvas.height
+    );
+    this.gl.uniform4f(this.colorLocation, 1, 0, 0, 1);
+    this.gl.drawArrays(this.gl.TRIANGLES, 0, 3);
+
+    // Crtaj krug na vrhu trougla (na poziciji čvora)
+    this.drawCircle(x, y, 4, [1, 0, 0, 1], 16);
+
+    // Crtaj horizontalnu liniju ispod trougla
+    const lineY = y + triangleHeight + 4; // Malo ispod donje stranice trougla
+    const lineLength = size * 1.5;
+    this.drawLine(
+      x - lineLength,
+      lineY,
+      x + lineLength,
+      lineY,
+      [1, 0, 0, 1],
+      2
+    );
+  }
 }
