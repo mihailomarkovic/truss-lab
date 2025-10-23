@@ -258,6 +258,28 @@ class SimpleTrussApp {
         this.resetCanvas();
       });
     }
+
+    const calculateBtn = document.getElementById("calculateBtn");
+    if (calculateBtn) {
+      calculateBtn.addEventListener("click", () => {
+        this.calculate();
+      });
+    }
+  }
+
+  calculate() {
+    console.log("Izračunaj:", {
+      nodes: this.nodes,
+      beams: this.beams,
+      forces: this.forces,
+    });
+
+    const el = document.getElementById("coordText");
+    if (el) {
+      el.textContent = "Izračunavanje... (Za sada samo loguju podatke)";
+    }
+
+    // TODO: Implementirati proračun
   }
 
   resetCanvas() {
