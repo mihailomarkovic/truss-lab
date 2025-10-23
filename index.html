@@ -38,10 +38,37 @@
             </div>
           </div>
           <button class="tool-btn" data-tool="force">Sila</button>
+          <div class="force-submenu" id="forceSubmenu" style="display: none">
+            <div class="force-angle-grid">
+              <button class="force-angle-btn" data-force-angle="0">0°</button>
+              <button class="force-angle-btn" data-force-angle="45">45°</button>
+              <button class="force-angle-btn" data-force-angle="90">90°</button>
+              <button class="force-angle-btn" data-force-angle="135">
+                135°
+              </button>
+              <button class="force-angle-btn" data-force-angle="180">
+                180°
+              </button>
+              <button class="force-angle-btn" data-force-angle="225">
+                225°
+              </button>
+              <button class="force-angle-btn" data-force-angle="270">
+                270°
+              </button>
+              <button class="force-angle-btn" data-force-angle="315">
+                315°
+              </button>
+            </div>
+            <div class="intensity-control">
+              <button class="intensity-btn" id="decreaseIntensity">-</button>
+              <span class="intensity-value" id="intensityValue">0</span>
+              <button class="intensity-btn" id="increaseIntensity">+</button>
+            </div>
+          </div>
           <button class="reset-btn" id="resetBtn">Resetuj</button>
         </aside>
         <div class="canvas-container">
-          <canvas id="mainCanvas" width="800" height="600"></canvas>
+          <canvas id="mainCanvas" width="500" height="500"></canvas>
         </div>
       </div>
       <footer id="statusBar" class="status-bar">

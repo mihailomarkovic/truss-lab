@@ -10,6 +10,9 @@ class SimpleTrussApp {
     // Lista štapova
     this.beams = [];
 
+    // Lista sila
+    this.forces = [];
+
     // Aktivni alat
     this.activeTool = "node"; // node | beam | support | force
 
@@ -22,6 +25,12 @@ class SimpleTrussApp {
     // Trenutni ugao oslonca
     this.supportAngle = 0; // 0 | 90 | 180 | 270
 
+    // Trenutni ugao sile
+    this.forceAngle = 0; // 0 | 45 | 90 | 135 | 180 | 225 | 270 | 315
+
+    // Trenutni intenzitet sile
+    this.forceIntensity = 0; // U Njutnima
+
     this.init();
   }
 
@@ -31,6 +40,8 @@ class SimpleTrussApp {
     this.setupResetButton();
     this.setupSupportSubmenu();
     this.setupAngleSubmenu();
+    this.setupForceSubmenu();
+    this.setupIntensityControls();
     this.render();
   }
 
@@ -46,6 +57,8 @@ class SimpleTrussApp {
         this.handleBeamClick(snapped.x, snapped.y);
       } else if (this.activeTool === "support") {
         this.handleSupportClick(snapped.x, snapped.y);
+      } else if (this.activeTool === "force") {
+        this.handleForceClick(snapped.x, snapped.y);
       } else {
         // Za sada samo obavesti koji je alat izabran
         const el = document.getElementById("coordText");
@@ -77,6 +90,9 @@ class SimpleTrussApp {
               submenu.style.display === "none" ? "flex" : "none";
           }
 
+          // Postavi aktivni alat na "support"
+          this.activeTool = "support";
+
           // Aktiviraj dugme "Oslonac"
           buttons.forEach((b) => b.classList.remove("active"));
           btn.classList.add("active");
@@ -98,9 +114,42 @@ class SimpleTrussApp {
           return;
         }
 
+        // Ako je kliknut alat "force", prikaži podmeni
+        if (tool === "force") {
+          const submenu = document.getElementById("forceSubmenu");
+          if (submenu) {
+            submenu.style.display =
+              submenu.style.display === "none" ? "flex" : "none";
+          }
+
+          // Postavi aktivni alat na "force"
+          this.activeTool = "force";
+
+          // Aktiviraj dugme "Sila"
+          buttons.forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+
+          // Resetuj izbor kad se otvori podmeni
+          this.forceAngle = 0;
+
+          // Resetuj aktivne dugmiće u podmeniju
+          const forceAngleBtns = document.querySelectorAll(".force-angle-btn");
+          forceAngleBtns.forEach((b) => b.classList.remove("active"));
+
+          const el = document.getElementById("coordText");
+          if (el)
+            el.textContent = `Alat: Sila | Ugao: ${this.forceAngle}° | Intenzitet: ${this.forceIntensity}`;
+
+          return;
+        }
+
         // Sakrij support podmeni ako je izabran drugi alat
         const submenu = document.getElementById("supportSubmenu");
         if (submenu) submenu.style.display = "none";
+
+        // Sakrij force podmeni ako je izabran drugi alat
+        const forceSubmenu = document.getElementById("forceSubmenu");
+        if (forceSubmenu) forceSubmenu.style.display = "none";
 
         this.activeTool = tool;
         this.supportType = null; // Resetuj tip oslonca
@@ -184,9 +233,10 @@ class SimpleTrussApp {
   }
 
   resetCanvas() {
-    // Obriši sve čvorove i štapove
+    // Obriši sve čvorove, štapove i sile
     this.nodes = [];
     this.beams = [];
+    this.forces = [];
     this.selectedNodeForBeam = null;
 
     // Ponovo renderuj (samo mreža će ostati)
@@ -374,6 +424,109 @@ class SimpleTrussApp {
       } else {
         // Crtaj običan čvor kao krug
         this.renderer.drawCircle(node.x, node.y, 6, [0.11, 0.08, 0.06, 1], 24); // shadcn stone-900
+      }
+    }
+
+    // Crtaj sve sile
+    for (const force of this.forces) {
+      this.renderer.drawForceArrow(
+        force.node.x,
+        force.node.y,
+        force.angle,
+        force.intensity
+      );
+    }
+  }
+
+  setupForceSubmenu() {
+    const forceAngleBtns = document.querySelectorAll(".force-angle-btn");
+    forceAngleBtns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const angle = parseInt(btn.getAttribute("data-force-angle"));
+        if (isNaN(angle)) return;
+
+        this.forceAngle = angle;
+
+        // Aktiviraj kliknuti ugao u podmeniju
+        forceAngleBtns.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        const el = document.getElementById("coordText");
+        if (el) {
+          el.textContent = `Alat: Sila | Ugao: ${angle}° | Intenzitet: ${this.forceIntensity}`;
+        }
+      });
+    });
+  }
+
+  setupIntensityControls() {
+    const increaseBtn = document.getElementById("increaseIntensity");
+    const decreaseBtn = document.getElementById("decreaseIntensity");
+    const intensityDisplay = document.getElementById("intensityValue");
+
+    if (increaseBtn) {
+      increaseBtn.addEventListener("click", () => {
+        this.forceIntensity += 10;
+        this.updateIntensityDisplay();
+      });
+    }
+
+    if (decreaseBtn) {
+      decreaseBtn.addEventListener("click", () => {
+        this.forceIntensity = Math.max(0, this.forceIntensity - 10);
+        this.updateIntensityDisplay();
+      });
+    }
+  }
+
+  updateIntensityDisplay() {
+    const el = document.getElementById("intensityValue");
+    if (el) {
+      el.textContent = `${this.forceIntensity}`;
+    }
+
+    const statusEl = document.getElementById("coordText");
+    if (statusEl && this.activeTool === "force") {
+      statusEl.textContent = `Alat: Sila | Ugao: ${this.forceAngle}° | Intenzitet: ${this.forceIntensity}`;
+    }
+  }
+
+  handleForceClick(x, y) {
+    const clickedNode = this.findNodeAt(x, y);
+
+    if (clickedNode) {
+      // Dodaj silu na čvor (oslonac ili običan čvor)
+      const force = {
+        id: this.forces.length + 1,
+        node: clickedNode,
+        angle: this.forceAngle,
+        intensity: this.forceIntensity,
+      };
+
+      // Proveri da li već postoji sila na ovom čvoru
+      const existingForce = this.forces.find(
+        (f) => f.node.id === clickedNode.id
+      );
+      if (existingForce) {
+        // Zameni postojeću silu
+        existingForce.angle = this.forceAngle;
+        existingForce.intensity = this.forceIntensity;
+      } else {
+        this.forces.push(force);
+      }
+
+      this.render();
+
+      const el = document.getElementById("coordText");
+      if (el) {
+        el.textContent = `Sila postavljena na čvor ${clickedNode.id} | ${this.forceIntensity} @ ${this.forceAngle}°`;
+      }
+
+      console.log("Dodata sila:", force);
+    } else {
+      const el = document.getElementById("coordText");
+      if (el) {
+        el.textContent = `Alat: Sila | Ugao: ${this.forceAngle}° | Intenzitet: ${this.forceIntensity} | Kliknite na čvor`;
       }
     }
   }

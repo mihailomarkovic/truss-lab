@@ -149,7 +149,7 @@ class SimpleRenderer {
   }
 
   drawGrid() {
-    const gridSize = 50;
+    const gridSize = 50; // 500px / 10 = 50px po kvadratu
     const width = this.canvas.width;
     const height = this.canvas.height;
 
@@ -499,5 +499,61 @@ class SimpleRenderer {
       [0.8, 0.2, 0.2, 1],
       2
     ); // shadcn red-600
+  }
+
+  // Crtanje strelice za silu
+  drawForceArrow(x, y, angle, intensity) {
+    const arrowLength = 30; // Dužina strelice
+    const arrowHeadSize = 8; // Veličina vrha strelice
+
+    // Konvertuj ugao u radijane
+    const angleRad = (-angle * Math.PI) / 180; // Negativan za suprotno od kazaljke
+    const cos = Math.cos(angleRad);
+    const sin = Math.sin(angleRad);
+
+    // Krajnja tačka strelice
+    const endX = x + cos * arrowLength;
+    const endY = y + sin * arrowLength;
+
+    // Crtaj liniju strelice
+    this.drawLine(x, y, endX, endY, [0.8, 0.2, 0.2, 1], 3); // Crvena
+
+    // Crtaj vrh strelice (trougao)
+    const headAngle1 = angleRad + Math.PI * 0.8; // 144° offset
+    const headAngle2 = angleRad - Math.PI * 0.8; // 144° offset
+
+    const headX1 = endX + Math.cos(headAngle1) * arrowHeadSize;
+    const headY1 = endY + Math.sin(headAngle1) * arrowHeadSize;
+    const headX2 = endX + Math.cos(headAngle2) * arrowHeadSize;
+    const headY2 = endY + Math.sin(headAngle2) * arrowHeadSize;
+
+    // Crtaj trougao za vrh strelice
+    const triangleVertices = [endX, endY, headX1, headY1, headX2, headY2];
+
+    this.gl.useProgram(this.program);
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.positionBuffer);
+    this.gl.bufferData(
+      this.gl.ARRAY_BUFFER,
+      new Float32Array(triangleVertices),
+      this.gl.STATIC_DRAW
+    );
+
+    this.gl.enableVertexAttribArray(this.positionLocation);
+    this.gl.vertexAttribPointer(
+      this.positionLocation,
+      2,
+      this.gl.FLOAT,
+      false,
+      0,
+      0
+    );
+
+    this.gl.uniform2f(
+      this.resolutionLocation,
+      this.canvas.width,
+      this.canvas.height
+    );
+    this.gl.uniform4f(this.colorLocation, 0.8, 0.2, 0.2, 1); // shadcn red-600
+    this.gl.drawArrays(this.gl.TRIANGLES, 0, 3);
   }
 }

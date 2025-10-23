@@ -202,6 +202,76 @@ header p {
   border-color: var(--primary-dark);
 }
 
+.force-submenu {
+  margin-left: 20px;
+  margin-top: -5px;
+  margin-bottom: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.force-angle-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 3px;
+}
+
+.force-angle-btn {
+  padding: 8px 4px;
+  border: 1px solid #a8a29e; /* shadcn stone-400 */
+  background: #fafaf9; /* shadcn stone-50 */
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background var(--transition-speed);
+  text-align: center;
+  font-size: 0.8rem;
+}
+
+.force-angle-btn:hover {
+  background: #f5f5f4; /* shadcn stone-100 */
+}
+
+.force-angle-btn.active {
+  background: #e7e5e4; /* shadcn stone-200 */
+  border-color: var(--primary-dark);
+  font-weight: bold;
+}
+
+.intensity-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+  border: 1px solid #a8a29e; /* shadcn stone-400 */
+  border-radius: 6px;
+  background: #fafaf9; /* shadcn stone-50 */
+  margin-top: 5px;
+}
+
+.intensity-btn {
+  padding: 8px 12px;
+  border: 1px solid #a8a29e; /* shadcn stone-400 */
+  background: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background var(--transition-speed);
+  font-size: 1.2rem;
+  font-weight: bold;
+  min-width: 36px;
+}
+
+.intensity-btn:hover {
+  background: #f5f5f4; /* shadcn stone-100 */
+}
+
+.intensity-value {
+  padding: 0 12px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+
 .status-bar {
   margin-top: 12px;
   padding: 8px 12px;
