@@ -285,8 +285,11 @@ class SimpleTrussApp {
 
       const modulusInput = document.getElementById("modulusInput");
       const areaInput = document.getElementById("areaInput");
-      const E = modulusInput ? parseFloat(modulusInput.value) : 200000000000;
-      const A = areaInput ? parseFloat(areaInput.value) : 0.0005;
+      // Konverzija: MPa → Pa (×10^6), cm² → m² (×10^-4)
+      const E = modulusInput
+        ? parseFloat(modulusInput.value) * 1e6
+        : 200000000000;
+      const A = areaInput ? parseFloat(areaInput.value) * 1e-4 : 0.0005;
 
       // Broj čvorova i štapova
       const numNodes = this.nodes.length;
@@ -565,10 +568,186 @@ class SimpleTrussApp {
   }
 
   displayResults(results) {
-    console.log("=== REZULTATI MKE PRORAČUNA ===");
-    console.log("Pomeranja čvorova:", results.displacements);
-    console.log("Naponi u štapovima:", results.stresses);
-    console.log("Reakcije oslonaca:", results.reactions);
+    console.log("\n╔════════════════════════════════════════════════════╗");
+    console.log("║           REZULTATI MKE PRORAČUNA                  ║");
+    console.log("╚════════════════════════════════════════════════════╝\n");
+
+    // Ispis ulaznih podataka
+    const modulusInput = document.getElementById("modulusInput");
+    const areaInput = document.getElementById("areaInput");
+    const E_MPa = modulusInput ? parseFloat(modulusInput.value) : 200000;
+    const A_cm2 = areaInput ? parseFloat(areaInput.value) : 5;
+    // Konverzija: MPa → Pa (×10^6), cm² → m² (×10^-4)
+    const E = E_MPa * 1e6;
+    const A = A_cm2 * 1e-4;
+
+    console.log("─── ULAZNI PODACI ───");
+    console.log(`Broj čvorova: ${this.nodes.length}`);
+    console.log(`Broj štapova: ${this.beams.length}`);
+    console.log(`Broj sila: ${this.forces.length}`);
+    console.log(
+      `Modul elastičnosti (E): ${E_MPa} MPa = ${E.toExponential(2)} Pa`
+    );
+    console.log(`Poprečni presek (A): ${A_cm2} cm² = ${A.toExponential(4)} m²`);
+
+    // Ispis koordinata čvorova
+    console.log("\n─── KOORDINATE ČVOROVA ───");
+    this.nodes.forEach((node) => {
+      const type =
+        node.type === "support_fixed"
+          ? "(nepokretan oslonac)"
+          : node.type === "support_movable"
+          ? "(pokretan oslonac)"
+          : "";
+      console.log(
+        `Čvor ${node.id}: x = ${node.x.toFixed(1)}, y = ${node.y.toFixed(
+          1
+        )} ${type}`
+      );
+    });
+
+    // Ispis definicije štapova
+    console.log("\n─── DEFINICIJA ŠTAPOVA ───");
+    this.beams.forEach((beam) => {
+      const dx = beam.to.x - beam.from.x;
+      const dy = beam.to.y - beam.from.y;
+      const L = Math.sqrt(dx * dx + dy * dy);
+      console.log(
+        `Štap ${beam.id}: Čvor ${beam.from.id} → Čvor ${
+          beam.to.id
+        }, Dužina = ${L.toFixed(2)}`
+      );
+    });
+
+    // Ispis sila
+    console.log("\n─── OPTEREĆENJA ───");
+    this.forces.forEach((force) => {
+      const angleRad = (force.angle * Math.PI) / 180;
+      const fx = force.intensity * Math.cos(angleRad);
+      const fy = force.intensity * Math.sin(angleRad);
+      console.log(
+        `Sila na čvoru ${force.node.id}: Fx = ${fx.toFixed(
+          2
+        )} N, Fy = ${fy.toFixed(2)} N (Ugao: ${force.angle}°, Intenzitet: ${
+          force.intensity
+        } N)`
+      );
+    });
+
+    // Ispis pomeranja
+    console.log("\n─── POMERANJA ČVOROVA ───");
+    for (let i = 0; i < this.nodes.length; i++) {
+      const node = this.nodes[i];
+      const ux = results.displacements[i * 2];
+      const uy = results.displacements[i * 2 + 1];
+      console.log(
+        `Čvor ${node.id}: ux = ${ux.toExponential(
+          4
+        )} m, uy = ${uy.toExponential(4)} m`
+      );
+    }
+
+    // Ispis napona
+    console.log("\n─── NAPONI U ŠTAPOVIMA ───");
+    results.stresses.forEach((stress) => {
+      const type = stress.stress < 0 ? "PRITISAK" : "ZATEZANJE";
+      console.log(
+        `Štap ${stress.beamId}: σ = ${stress.stress.toExponential(
+          4
+        )} Pa [${type}]`
+      );
+    });
+
+    // Ispis reakcija
+    console.log("\n─── REAKCIJE OSLONACA ───");
+    results.reactions.forEach((reaction) => {
+      const node = this.nodes.find((n) => n.id === reaction.nodeId);
+      const supportType =
+        node?.type === "support_fixed" ? "Nepokretan" : "Pokretan";
+      console.log(
+        `Čvor ${
+          reaction.nodeId
+        } (${supportType}): Rx = ${reaction.rx.toExponential(
+          4
+        )} N, Ry = ${reaction.ry.toExponential(4)} N`
+      );
+    });
+
+    console.log("\n" + "═".repeat(54) + "\n");
+
+    // Prikaz pomeranja
+    const displacementsEl = document.getElementById("displacementsResults");
+    if (displacementsEl) {
+      let html = "";
+      for (let i = 0; i < this.nodes.length; i++) {
+        const node = this.nodes[i];
+        const ux = results.displacements[i * 2];
+        const uy = results.displacements[i * 2 + 1];
+        html += `
+          <div class="result-item">
+            <strong>Čvor ${node.id}</strong>
+            <div class="result-value">
+              ux = ${ux.toExponential(4)} m<br>
+              uy = ${uy.toExponential(4)} m
+            </div>
+          </div>
+        `;
+      }
+      displacementsEl.innerHTML = html;
+    }
+
+    // Prikaz napona
+    const stressesEl = document.getElementById("stressesResults");
+    if (stressesEl) {
+      let html = "";
+      results.stresses.forEach((stress) => {
+        const beam = this.beams.find((b) => b.id === stress.beamId);
+        const dx = beam.to.x - beam.from.x;
+        const dy = beam.to.y - beam.from.y;
+        const L = Math.sqrt(dx * dx + dy * dy);
+        const isCompression = stress.stress < 0;
+        const stressType = isCompression ? "pritisak" : "zatezanje";
+        html += `
+          <div class="result-item">
+            <strong>Štap ${stress.beamId}</strong>
+            <div class="result-value">
+              Dužina: ${L.toFixed(2)} px<br>
+              σ = ${stress.stress.toExponential(4)} Pa<br>
+              ε = ${stress.strain.toExponential(4)}<br>
+              Tip: ${stressType}
+            </div>
+          </div>
+        `;
+      });
+      stressesEl.innerHTML = html || '<p class="empty-state">Nema napona</p>';
+    }
+
+    // Prikaz reakcija
+    const reactionsEl = document.getElementById("reactionsResults");
+    if (reactionsEl) {
+      let html = "";
+      results.reactions.forEach((reaction) => {
+        const node = this.nodes.find((n) => n.id === reaction.nodeId);
+        const supportType =
+          node?.type === "support_fixed" ? "Nepokretan" : "Pokretan";
+        const magnitude = Math.sqrt(
+          reaction.rx * reaction.rx + reaction.ry * reaction.ry
+        );
+        html += `
+          <div class="result-item">
+            <strong>Čvor ${reaction.nodeId} (${supportType})</strong>
+            <div class="result-value">
+              Pozicija: (${node.x.toFixed(0)}, ${node.y.toFixed(0)})<br>
+              Rx = ${reaction.rx.toExponential(4)} N<br>
+              Ry = ${reaction.ry.toExponential(4)} N<br>
+              |R| = ${magnitude.toExponential(4)} N
+            </div>
+          </div>
+        `;
+      });
+      reactionsEl.innerHTML =
+        html || '<p class="empty-state">Nema reakcija</p>';
+    }
   }
 
   resetCanvas() {
@@ -585,6 +764,24 @@ class SimpleTrussApp {
     const el = document.getElementById("coordText");
     if (el) {
       el.textContent = "Koordinate: —";
+    }
+
+    // Očisti rezultate
+    const displacementsEl = document.getElementById("displacementsResults");
+    const stressesEl = document.getElementById("stressesResults");
+    const reactionsEl = document.getElementById("reactionsResults");
+
+    if (displacementsEl) {
+      displacementsEl.innerHTML =
+        '<p class="empty-state">Pokrenite proračun da vidite rezultate</p>';
+    }
+    if (stressesEl) {
+      stressesEl.innerHTML =
+        '<p class="empty-state">Pokrenite proračun da vidite rezultate</p>';
+    }
+    if (reactionsEl) {
+      reactionsEl.innerHTML =
+        '<p class="empty-state">Pokrenite proračun da vidite rezultate</p>';
     }
   }
 
@@ -783,14 +980,14 @@ class SimpleTrussApp {
 
     if (increaseBtn) {
       increaseBtn.addEventListener("click", () => {
-        this.forceIntensity += 10;
+        this.forceIntensity += 100;
         this.updateIntensityDisplay();
       });
     }
 
     if (decreaseBtn) {
       decreaseBtn.addEventListener("click", () => {
-        this.forceIntensity = Math.max(0, this.forceIntensity - 10);
+        this.forceIntensity = Math.max(0, this.forceIntensity - 100);
         this.updateIntensityDisplay();
       });
     }

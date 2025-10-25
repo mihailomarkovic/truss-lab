@@ -13,7 +13,8 @@
       </header>
 
       <div class="workspace">
-        <aside class="sidebar">
+        <aside class="sidebar left-sidebar">
+          <h2>Alati</h2>
           <button class="tool-btn" data-tool="node">Čvor</button>
           <button class="tool-btn" data-tool="beam">Štap</button>
           <button class="tool-btn" data-tool="support">Oslonac</button>
@@ -68,30 +69,58 @@
           <div class="material-properties">
             <h3>Materijalne karakteristike</h3>
             <div class="input-group">
-              <label for="modulusInput">Modul elastičnosti (E) [Pa]:</label>
+              <label for="modulusInput">Modul elastičnosti (E) [MPa]:</label>
               <input
                 type="number"
                 id="modulusInput"
-                value="200000000000"
-                step="1000000000"
+                value="200000"
+                step="1000"
               />
             </div>
             <div class="input-group">
-              <label for="areaInput">Poprečni presek (A) [m²]:</label>
-              <input
-                type="number"
-                id="areaInput"
-                value="0.0005"
-                step="0.0001"
-              />
+              <label for="areaInput">Poprečni presek (A) [cm²]:</label>
+              <input type="number" id="areaInput" value="5" step="0.1" />
             </div>
           </div>
           <button class="calculate-btn" id="calculateBtn">IZRAČUNAJ</button>
           <button class="reset-btn" id="resetBtn">OBRIŠI</button>
         </aside>
+
         <div class="canvas-container">
-          <canvas id="mainCanvas" width="500" height="500"></canvas>
+          <canvas id="mainCanvas" width="600" height="600"></canvas>
         </div>
+
+        <aside class="sidebar right-sidebar">
+          <h2>Rezultati</h2>
+          <div class="results-section">
+            <div class="result-group">
+              <h3>Pomeranja čvorova</h3>
+              <div id="displacementsResults" class="result-content">
+                <p class="empty-state">
+                  Pokrenite proračun da vidite rezultate
+                </p>
+              </div>
+            </div>
+
+            <div class="result-group">
+              <h3>Naponi u štapovima</h3>
+              <div id="stressesResults" class="result-content">
+                <p class="empty-state">
+                  Pokrenite proračun da vidite rezultate
+                </p>
+              </div>
+            </div>
+
+            <div class="result-group">
+              <h3>Reakcije oslonaca</h3>
+              <div id="reactionsResults" class="result-content">
+                <p class="empty-state">
+                  Pokrenite proračun da vidite rezultate
+                </p>
+              </div>
+            </div>
+          </div>
+        </aside>
       </div>
       <footer id="statusBar" class="status-bar">
         <span id="coordText">Koordinate: —</span>
