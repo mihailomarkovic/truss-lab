@@ -1,6 +1,3 @@
-// TrussLab - Aplikacija za proračun 2D rešetkastih struktura
-// Metoda Konačnih Elemenata (MKE)
-
 class SimpleTrussApp {
   constructor() {
     this.canvas = document.getElementById("mainCanvas");
@@ -30,6 +27,9 @@ class SimpleTrussApp {
 
     // Trenutni intenzitet sile
     this.forceIntensity = 0;
+
+    // Prikaz mreže
+    this.showGrid = true;
 
     this.init();
   }
@@ -71,6 +71,33 @@ class SimpleTrussApp {
     // Resize prozora
     window.addEventListener("resize", () => {
       this.handleResize();
+    });
+
+    // Tastaturne prečice
+    window.addEventListener("keydown", (e) => {
+      // G - Toggle Grid
+      if (e.key === "g" || e.key === "G") {
+        this.showGrid = !this.showGrid;
+        this.render();
+        const el = document.getElementById("coordText");
+        if (el) {
+          el.textContent = `Mreža: ${
+            this.showGrid ? "UKLJUČENA" : "ISKLJUČENA"
+          } (pritisni G za promenu)`;
+        }
+      }
+
+      // Q - Zatvori (prikaži poruku)
+      if (e.key === "q" || e.key === "Q") {
+        if (confirm("Da li želite da zatvorite aplikaciju?")) {
+          window.close();
+        }
+      }
+
+      // E - Export fajl
+      if (e.key === "e" || e.key === "E") {
+        this.exportToFile();
+      }
     });
   }
 
@@ -914,8 +941,10 @@ class SimpleTrussApp {
   render() {
     this.renderer.clear();
 
-    // Crtaj mrežu
-    this.renderer.drawGrid();
+    // Crtaj mrežu (ako je uključena)
+    if (this.showGrid) {
+      this.renderer.drawGrid();
+    }
 
     // Crtaj sve štapove
     for (const beam of this.beams) {
@@ -1047,13 +1076,118 @@ class SimpleTrussApp {
     this.renderer.setupViewport();
     this.render();
   }
+
+  exportToFile() {
+    if (this.nodes.length === 0) {
+      alert("Nema podataka za export. Prvo nacrtaj konstrukciju.");
+      return;
+    }
+
+    const modulusInput = document.getElementById("modulusInput");
+    const areaInput = document.getElementById("areaInput");
+    const E_MPa = modulusInput ? parseFloat(modulusInput.value) : 200000;
+    const A_cm2 = areaInput ? parseFloat(areaInput.value) : 5;
+    const E = E_MPa * 1e6;
+    const A = A_cm2 * 1e-4;
+
+    // Broj podataka
+    const numNodes = this.nodes.length;
+    const numBeams = this.beams.length;
+    const numMaterials = 1;
+    const numLoads = this.forces.length;
+
+    // Broj sprečenih pomeranja
+    const supports = this.nodes.filter(
+      (n) => n.type === "support_fixed" || n.type === "support_movable"
+    );
+    let numConstraints = 0;
+    supports.forEach((node) => {
+      if (node.type === "support_fixed") numConstraints += 2; // x i y
+      else numConstraints += 1; // samo y
+    });
+
+    let content = "";
+    content += `${numNodes}\n`;
+    content += `${numBeams}\n`;
+    content += `${numMaterials}\n`;
+    content += `${numLoads}\n`;
+    content += `${numConstraints}\n\n`;
+
+    // Koordinate čvorova
+    content += "# Koordinate čvorova (x, y)\n";
+    this.nodes.forEach((node) => {
+      content += `${(node.x / 100).toFixed(6)}  ${(node.y / 100).toFixed(6)}\n`;
+    });
+    content += "\n";
+
+    // Definicija štapova
+    content += "# Definicija štapova (čvor1, čvor2, materijal_id)\n";
+    this.beams.forEach((beam) => {
+      const idx1 = this.nodes.findIndex((n) => n.id === beam.from.id);
+      const idx2 = this.nodes.findIndex((n) => n.id === beam.to.id);
+      content += `${idx1}  ${idx2}  0\n`;
+    });
+    content += "\n";
+
+    // Karakteristike materijala
+    content += "# Karakteristike materijala (A, E)\n";
+    content += `${A.toExponential(6)}  ${E.toExponential(6)}\n\n`;
+
+    // Opterećenja
+    content += "# Opterećenja (čvor, Fx, Fy)\n";
+    this.forces.forEach((force) => {
+      const idx = this.nodes.findIndex((n) => n.id === force.node.id);
+      const angleRad = (force.angle * Math.PI) / 180;
+      const fx = force.intensity * Math.cos(angleRad);
+      const fy = force.intensity * Math.sin(angleRad);
+      content += `${idx}  ${fx.toFixed(6)}  ${fy.toFixed(6)}\n`;
+    });
+    content += "\n";
+
+    // Sprečena pomeranja
+    content += "# Sprečena pomeranja (čvor, pravac, vrednost)\n";
+    this.nodes.forEach((node, idx) => {
+      if (node.type === "support_fixed") {
+        content += `${idx}  0  0.000000\n`;
+        content += `${idx}  1  0.000000\n`;
+      } else if (node.type === "support_movable") {
+        content += `${idx}  1  0.000000\n`;
+      }
+    });
+
+    // Kreiranje i download fajla
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "MKE-2D.ulz";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    const el = document.getElementById("coordText");
+    if (el) {
+      el.textContent = `Fajl 'MKE-2D.ulz' je sačuvan! (Čvorovi: ${numNodes}, Štapovi: ${numBeams})`;
+    }
+
+    console.log("=== EXPORT MKE-2D.ulz ===");
+    console.log(content);
+  }
 }
 
 // Pokreni aplikaciju kada se stranica učita
 document.addEventListener("DOMContentLoaded", () => {
   try {
     const app = new SimpleTrussApp();
-    console.log("TrussLab aplikacija je uspešno pokrenuta!");
+    console.log("╔════════════════════════════════════════════════════╗");
+    console.log("║   2D REŠETKA - POSTAVKA PROBLEMA                   ║");
+    console.log("╠════════════════════════════════════════════════════╣");
+    console.log("║  Tastaturne prečice:                               ║");
+    console.log("║  [G] - Uključi/isključi mrežu                      ║");
+    console.log("║  [E] - Export u MKE-2D.ulz                         ║");
+    console.log("║  [Q] - Zatvori aplikaciju                          ║");
+    console.log("╚════════════════════════════════════════════════════╝");
   } catch (error) {
     console.error("Greška pri pokretanju aplikacije:", error);
     alert(

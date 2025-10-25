@@ -369,6 +369,15 @@ header p {
   border: 1px solid var(--border-color);
   border-radius: 8px;
   flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.shortcuts-hint {
+  color: var(--text-light);
+  font-size: 0.85rem;
+  font-style: italic;
 }
 
 /* Results sidebar styles */
