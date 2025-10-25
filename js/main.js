@@ -1,4 +1,5 @@
-// Jednostavna aplikacija za dodavanje čvorova
+// TrussLab - Aplikacija za proračun 2D rešetkastih struktura
+// Metoda Konačnih Elemenata (MKE)
 
 class SimpleTrussApp {
   constructor() {
@@ -9,7 +10,6 @@ class SimpleTrussApp {
     this.nodes = [];
     // Lista štapova
     this.beams = [];
-
     // Lista sila
     this.forces = [];
 
@@ -29,7 +29,7 @@ class SimpleTrussApp {
     this.forceAngle = 0; // 0 | 45 | 90 | 135 | 180 | 225 | 270 | 315
 
     // Trenutni intenzitet sile
-    this.forceIntensity = 0; // U Njutnima
+    this.forceIntensity = 0;
 
     this.init();
   }
@@ -60,7 +60,6 @@ class SimpleTrussApp {
       } else if (this.activeTool === "force") {
         this.handleForceClick(snapped.x, snapped.y);
       } else {
-        // Za sada samo obavesti koji je alat izabran
         const el = document.getElementById("coordText");
         if (el)
           el.textContent = `Alat: ${this.labelForTool(
@@ -90,29 +89,22 @@ class SimpleTrussApp {
               submenu.style.display === "none" ? "flex" : "none";
           }
 
-          // Postavi aktivni alat na "support"
           this.activeTool = "support";
-
-          // Aktiviraj dugme "Oslonac"
           buttons.forEach((b) => b.classList.remove("active"));
           btn.classList.add("active");
 
-          // Resetuj tip oslonca kad se otvori podmeni
           this.supportType = null;
           this.supportAngle = 0;
 
-          // Resetuj aktivne dugmiće u podmeniju
           const halfBtns = document.querySelectorAll(".half-btn");
           halfBtns.forEach((b) => b.classList.remove("active"));
 
           const angleBtns = document.querySelectorAll(".angle-btn");
           angleBtns.forEach((b) => b.classList.remove("active"));
 
-          // Sakrij force podmeni ako je otvoren
           const forceSubmenu = document.getElementById("forceSubmenu");
           if (forceSubmenu) forceSubmenu.style.display = "none";
 
-          // Resetuj aktivne dugmiće u force podmeniju
           const forceAngleBtns = document.querySelectorAll(".force-angle-btn");
           forceAngleBtns.forEach((b) => b.classList.remove("active"));
 
@@ -130,25 +122,18 @@ class SimpleTrussApp {
               submenu.style.display === "none" ? "flex" : "none";
           }
 
-          // Postavi aktivni alat na "force"
           this.activeTool = "force";
-
-          // Aktiviraj dugme "Sila"
           buttons.forEach((b) => b.classList.remove("active"));
           btn.classList.add("active");
 
-          // Resetuj izbor kad se otvori podmeni
           this.forceAngle = 0;
 
-          // Resetuj aktivne dugmiće u podmeniju
           const forceAngleBtns = document.querySelectorAll(".force-angle-btn");
           forceAngleBtns.forEach((b) => b.classList.remove("active"));
 
-          // Sakrij support podmeni ako je otvoren
           const supportSubmenu = document.getElementById("supportSubmenu");
           if (supportSubmenu) supportSubmenu.style.display = "none";
 
-          // Resetuj aktivne dugmiće u support podmeniju
           const halfBtns = document.querySelectorAll(".half-btn");
           halfBtns.forEach((b) => b.classList.remove("active"));
           const angleBtns = document.querySelectorAll(".angle-btn");
@@ -165,7 +150,6 @@ class SimpleTrussApp {
         const submenu = document.getElementById("supportSubmenu");
         if (submenu) submenu.style.display = "none";
 
-        // Resetuj aktivne dugmiće u support podmeniju
         const halfBtns = document.querySelectorAll(".half-btn");
         halfBtns.forEach((b) => b.classList.remove("active"));
         const angleBtns = document.querySelectorAll(".angle-btn");
@@ -175,15 +159,13 @@ class SimpleTrussApp {
         const forceSubmenu = document.getElementById("forceSubmenu");
         if (forceSubmenu) forceSubmenu.style.display = "none";
 
-        // Resetuj aktivne dugmiće u force podmeniju
         const forceAngleBtns = document.querySelectorAll(".force-angle-btn");
         forceAngleBtns.forEach((b) => b.classList.remove("active"));
 
         this.activeTool = tool;
-        this.supportType = null; // Resetuj tip oslonca
-        this.supportAngle = 0; // Resetuj ugao
+        this.supportType = null;
+        this.supportAngle = 0;
 
-        // UI aktivno stanje
         buttons.forEach((b) => b.classList.remove("active"));
         btn.classList.add("active");
 
@@ -207,7 +189,6 @@ class SimpleTrussApp {
         this.supportType = supportType;
         this.activeTool = "support";
 
-        // Aktiviraj aktivni alat
         const buttons = document.querySelectorAll(".tool-btn");
         buttons.forEach((b) => b.classList.remove("active"));
         const supportBtn = document.querySelector(
@@ -215,7 +196,6 @@ class SimpleTrussApp {
         );
         if (supportBtn) supportBtn.classList.add("active");
 
-        // Aktiviraj kliknuti tip u podmeniju
         halfBtns.forEach((b) => b.classList.remove("active"));
         btn.classList.add("active");
 
@@ -237,7 +217,6 @@ class SimpleTrussApp {
 
         this.supportAngle = angle;
 
-        // Aktiviraj kliknuti ugao u podmeniju
         angleBtns.forEach((b) => b.classList.remove("active"));
         btn.classList.add("active");
 
@@ -268,18 +247,328 @@ class SimpleTrussApp {
   }
 
   calculate() {
-    console.log("Izračunaj:", {
-      nodes: this.nodes,
-      beams: this.beams,
-      forces: this.forces,
-    });
-
     const el = document.getElementById("coordText");
     if (el) {
-      el.textContent = "Izračunavanje... (Za sada samo loguju podatke)";
+      el.textContent = "Izračunavanje...";
     }
 
-    // TODO: Implementirati proračun
+    // Izvršavanje MKE proračuna
+    const results = this.performMKECalculation();
+
+    if (results.success) {
+      this.displayResults(results);
+      el.textContent = `Proračun završen! Pomeranja: ${results.displacements.length}, Naponi: ${results.stresses.length}`;
+    } else {
+      el.textContent = `Greška: ${results.error}`;
+    }
+  }
+
+  // MKE Proračun
+  performMKECalculation() {
+    try {
+      // Validacija podataka
+      if (this.nodes.length < 2) {
+        return { success: false, error: "Potrebno je najmanje 2 čvora" };
+      }
+      if (this.beams.length === 0) {
+        return { success: false, error: "Potrebno je najmanje 1 štap" };
+      }
+
+      // Proveri da li ima oslonaca
+      const supports = this.nodes.filter(
+        (node) =>
+          node.type === "support_fixed" || node.type === "support_movable"
+      );
+      if (supports.length === 0) {
+        return { success: false, error: "Potrebno je najmanje 1 oslonac" };
+      }
+
+      const modulusInput = document.getElementById("modulusInput");
+      const areaInput = document.getElementById("areaInput");
+      const E = modulusInput ? parseFloat(modulusInput.value) : 200000000000;
+      const A = areaInput ? parseFloat(areaInput.value) : 0.0005;
+
+      // Broj čvorova i štapova
+      const numNodes = this.nodes.length;
+
+      // Kreiranje globalne matrice krutosti
+      const globalStiffness = this.createGlobalStiffnessMatrix(numNodes, E, A);
+
+      // Kreiranje vektora opterećenja
+      const loadVector = this.createLoadVector(numNodes);
+
+      // Primena graničnih uslova (oslonci)
+      const { reducedStiffness, reducedLoad, freeDOFs } =
+        this.applyBoundaryConditions(globalStiffness, loadVector);
+
+      // Rešavanje sistema jednačina
+      const freeDisplacements = this.solveSystem(reducedStiffness, reducedLoad);
+
+      // Kreiranje kompletnog vektora pomeranja
+      const displacements = Array(numNodes * 2).fill(0);
+      freeDOFs.forEach((dof, index) => {
+        displacements[dof] = freeDisplacements[index];
+      });
+
+      // Izračunavanje napona u štapovima
+      const stresses = this.calculateStresses(displacements, E);
+
+      // Izračunavanje reakcija oslonaca
+      const reactions = this.calculateReactions(
+        globalStiffness,
+        displacements,
+        loadVector
+      );
+
+      return {
+        success: true,
+        displacements: displacements,
+        stresses: stresses,
+        reactions: reactions,
+        nodes: this.nodes,
+        beams: this.beams,
+      };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  createGlobalStiffnessMatrix(numNodes, E, A) {
+    const size = numNodes * 2; // 2 DOF po čvoru (x, y)
+    const K = Array(size)
+      .fill()
+      .map(() => Array(size).fill(0));
+
+    this.beams.forEach((beam) => {
+      const node1 = this.nodes.find((n) => n.id === beam.from.id);
+      const node2 = this.nodes.find((n) => n.id === beam.to.id);
+
+      if (!node1 || !node2) return;
+
+      // Dužina štapa
+      const dx = node2.x - node1.x;
+      const dy = node2.y - node1.y;
+      const L = Math.sqrt(dx * dx + dy * dy);
+
+      if (L === 0) return;
+
+      // Kosinus i sinus ugla štapa
+      const cos = dx / L;
+      const sin = dy / L;
+
+      // Lokalna matrica krutosti štapa
+      const k = (E * A) / L;
+      const ke = [
+        [k * cos * cos, k * cos * sin, -k * cos * cos, -k * cos * sin],
+        [k * cos * sin, k * sin * sin, -k * cos * sin, -k * sin * sin],
+        [-k * cos * cos, -k * cos * sin, k * cos * cos, k * cos * sin],
+        [-k * cos * sin, -k * sin * sin, k * cos * sin, k * sin * sin],
+      ];
+
+      // Indeksi u globalnoj matrici
+      const node1Index = this.nodes.findIndex((n) => n.id === node1.id);
+      const node2Index = this.nodes.findIndex((n) => n.id === node2.id);
+      const dof1 = node1Index * 2;
+      const dof2 = node1Index * 2 + 1;
+      const dof3 = node2Index * 2;
+      const dof4 = node2Index * 2 + 1;
+
+      // Dodavanje u globalnu matricu
+      const indices = [dof1, dof2, dof3, dof4];
+      for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 4; j++) {
+          K[indices[i]][indices[j]] += ke[i][j];
+        }
+      }
+    });
+
+    return K;
+  }
+
+  createLoadVector(numNodes) {
+    const size = numNodes * 2;
+    const F = Array(size).fill(0);
+
+    this.forces.forEach((force) => {
+      const node = this.nodes.find((n) => n.id === force.node?.id);
+
+      if (!node) return;
+
+      const angleRad = (force.angle * Math.PI) / 180;
+      const fx = force.intensity * Math.cos(angleRad);
+      const fy = force.intensity * Math.sin(angleRad);
+
+      const nodeIndex = this.nodes.findIndex((n) => n.id === node.id);
+      const dofX = nodeIndex * 2;
+      const dofY = nodeIndex * 2 + 1;
+
+      F[dofX] += fx;
+      F[dofY] += fy;
+    });
+
+    return F;
+  }
+
+  applyBoundaryConditions(K, F) {
+    const size = K.length;
+    const fixedDOFs = [];
+
+    // Pronađi oslonce (čvorove sa ograničenjima)
+    this.nodes.forEach((node) => {
+      if (node.type === "support_fixed" || node.type === "support_movable") {
+        const nodeIndex = this.nodes.findIndex((n) => n.id === node.id);
+        if (node.type === "support_fixed") {
+          fixedDOFs.push(nodeIndex * 2); // x pomeranje
+          fixedDOFs.push(nodeIndex * 2 + 1); // y pomeranje
+        } else if (node.type === "support_movable") {
+          // Samo y pomeranje je ograničeno za pokretni oslonac
+          fixedDOFs.push(nodeIndex * 2 + 1);
+        }
+      }
+    });
+
+    // Kreiranje reducirane matrice
+    const freeDOFs = [];
+    for (let i = 0; i < size; i++) {
+      if (!fixedDOFs.includes(i)) {
+        freeDOFs.push(i);
+      }
+    }
+
+    const reducedSize = freeDOFs.length;
+    const Kr = Array(reducedSize)
+      .fill()
+      .map(() => Array(reducedSize).fill(0));
+    const Fr = Array(reducedSize).fill(0);
+
+    for (let i = 0; i < reducedSize; i++) {
+      Fr[i] = F[freeDOFs[i]];
+      for (let j = 0; j < reducedSize; j++) {
+        Kr[i][j] = K[freeDOFs[i]][freeDOFs[j]];
+      }
+    }
+
+    return { reducedStiffness: Kr, reducedLoad: Fr, freeDOFs: freeDOFs };
+  }
+
+  solveSystem(K, F) {
+    const n = K.length;
+
+    // Gauss eliminacija
+    for (let i = 0; i < n; i++) {
+      // Pivot
+      let maxRow = i;
+      for (let k = i + 1; k < n; k++) {
+        if (Math.abs(K[k][i]) > Math.abs(K[maxRow][i])) {
+          maxRow = k;
+        }
+      }
+
+      // Zamena redova
+      [K[i], K[maxRow]] = [K[maxRow], K[i]];
+      [F[i], F[maxRow]] = [F[maxRow], F[i]];
+
+      // Eliminacija
+      for (let k = i + 1; k < n; k++) {
+        const factor = K[k][i] / K[i][i];
+        for (let j = i; j < n; j++) {
+          K[k][j] -= factor * K[i][j];
+        }
+        F[k] -= factor * F[i];
+      }
+    }
+
+    // Supstitucija unazad
+    const x = Array(n).fill(0);
+    for (let i = n - 1; i >= 0; i--) {
+      x[i] = F[i];
+      for (let j = i + 1; j < n; j++) {
+        x[i] -= K[i][j] * x[j];
+      }
+      x[i] /= K[i][i];
+    }
+
+    return x;
+  }
+
+  calculateStresses(displacements, E) {
+    const stresses = [];
+
+    this.beams.forEach((beam) => {
+      const node1 = this.nodes.find((n) => n.id === beam.from.id);
+      const node2 = this.nodes.find((n) => n.id === beam.to.id);
+
+      if (!node1 || !node2) return;
+
+      const dx = node2.x - node1.x;
+      const dy = node2.y - node1.y;
+      const L = Math.sqrt(dx * dx + dy * dy);
+
+      if (L === 0) return;
+
+      const cos = dx / L;
+      const sin = dy / L;
+
+      // Lokalne pomeranja
+      const node1Index = this.nodes.findIndex((n) => n.id === node1.id);
+      const node2Index = this.nodes.findIndex((n) => n.id === node2.id);
+      const u1 = displacements[node1Index * 2];
+      const v1 = displacements[node1Index * 2 + 1];
+      const u2 = displacements[node2Index * 2];
+      const v2 = displacements[node2Index * 2 + 1];
+
+      // Napon u štapu
+      const strain = (cos * (u2 - u1) + sin * (v2 - v1)) / L;
+      const stress = E * strain;
+
+      stresses.push({
+        beamId: beam.id,
+        stress: stress,
+        strain: strain,
+      });
+    });
+
+    return stresses;
+  }
+
+  calculateReactions(K, displacements, F) {
+    const reactions = [];
+    const size = K.length;
+
+    // Izračunaj ukupne sile
+    const totalForces = Array(size).fill(0);
+    for (let i = 0; i < size; i++) {
+      for (let j = 0; j < size; j++) {
+        totalForces[i] += K[i][j] * displacements[j];
+      }
+    }
+
+    // Reakcije su razlika između ukupnih sila i spoljašnjih opterećenja
+    this.nodes.forEach((node) => {
+      if (node.type === "support_fixed" || node.type === "support_movable") {
+        const nodeIndex = this.nodes.findIndex((n) => n.id === node.id);
+        const dofX = nodeIndex * 2;
+        const dofY = nodeIndex * 2 + 1;
+
+        const rx = totalForces[dofX] - F[dofX];
+        const ry = totalForces[dofY] - F[dofY];
+
+        reactions.push({
+          nodeId: node.id,
+          rx: rx,
+          ry: ry,
+        });
+      }
+    });
+
+    return reactions;
+  }
+
+  displayResults(results) {
+    console.log("=== REZULTATI MKE PRORAČUNA ===");
+    console.log("Pomeranja čvorova:", results.displacements);
+    console.log("Naponi u štapovima:", results.stresses);
+    console.log("Reakcije oslonaca:", results.reactions);
   }
 
   resetCanvas() {
@@ -297,8 +586,6 @@ class SimpleTrussApp {
     if (el) {
       el.textContent = "Koordinate: —";
     }
-
-    console.log("Canvas je resetovan");
   }
 
   labelForTool(tool) {
@@ -321,14 +608,11 @@ class SimpleTrussApp {
       id: this.nodes.length + 1,
       x: x,
       y: y,
-      type: "node", // node | support_fixed | support_movable
+      type: "node",
     };
 
     this.nodes.push(node);
     this.render();
-
-    console.log("Dodat čvor:", node);
-    console.log("Ukupno čvorova:", this.nodes.length);
   }
 
   // Pronađi čvor na datoj poziciji (sa tolerancijom)
@@ -349,7 +633,6 @@ class SimpleTrussApp {
     const clickedNode = this.findNodeAt(x, y);
 
     if (!clickedNode) {
-      // Klik van čvora - resetuj izbor
       this.selectedNodeForBeam = null;
       const el = document.getElementById("coordText");
       if (el) el.textContent = "Alat: Štap | Izaberite prvi čvor";
@@ -357,15 +640,13 @@ class SimpleTrussApp {
     }
 
     if (!this.selectedNodeForBeam) {
-      // Prvi čvor izabran
       this.selectedNodeForBeam = clickedNode;
       const el = document.getElementById("coordText");
       if (el)
         el.textContent = `Alat: Štap | Prvi čvor: ${clickedNode.id} | Izaberite drugi čvor`;
     } else if (this.selectedNodeForBeam.id !== clickedNode.id) {
-      // Drugi čvor izabran - napravi štap
       this.addBeam(this.selectedNodeForBeam, clickedNode);
-      this.selectedNodeForBeam = null; // Resetuj izbor za sledeći štap
+      this.selectedNodeForBeam = null;
       const el = document.getElementById("coordText");
       if (el)
         el.textContent = `Alat: Štap | Štap kreiran | Izaberite prvi čvor za sledeći štap`;
@@ -374,7 +655,6 @@ class SimpleTrussApp {
 
   // Dodaj štap između dva čvora
   addBeam(node1, node2) {
-    // Proveri da li štap već postoji
     const existingBeam = this.beams.find(
       (beam) =>
         (beam.from.id === node1.id && beam.to.id === node2.id) ||
@@ -382,7 +662,6 @@ class SimpleTrussApp {
     );
 
     if (existingBeam) {
-      console.log("Štap već postoji između ovih čvorova");
       return;
     }
 
@@ -394,13 +673,10 @@ class SimpleTrussApp {
 
     this.beams.push(beam);
     this.render();
-
-    console.log("Dodat štap:", beam);
   }
 
   // Rukovanje klikom za oslonac
   handleSupportClick(x, y) {
-    // Proveri da li je tip oslonca izabran
     if (!this.supportType) {
       const el = document.getElementById("coordText");
       if (el)
@@ -412,9 +688,8 @@ class SimpleTrussApp {
     const clickedNode = this.findNodeAt(x, y);
 
     if (clickedNode) {
-      // Pretvori čvor u oslonac odgovarajućeg tipa
       clickedNode.type = `support_${this.supportType}`;
-      clickedNode.angle = this.supportAngle; // Dodaj ugao čvoru
+      clickedNode.angle = this.supportAngle;
       this.render();
 
       const el = document.getElementById("coordText");
@@ -422,10 +697,6 @@ class SimpleTrussApp {
         this.supportType === "fixed" ? "nepokretan" : "pokretan";
       if (el)
         el.textContent = `Čvor ${clickedNode.id} pretvoren u ${typeLabel} oslonac (${this.supportAngle}°)`;
-
-      console.log(
-        `Čvor ${clickedNode.id} pretvoren u ${typeLabel} oslonac pod uglom ${this.supportAngle}°`
-      );
     } else {
       const el = document.getElementById("coordText");
       if (el) {
@@ -456,24 +727,21 @@ class SimpleTrussApp {
         beam.from.y,
         beam.to.x,
         beam.to.y,
-        [0.11, 0.08, 0.06, 1], // shadcn stone-900
-        4 // Zadebljane linije
+        [0.11, 0.08, 0.06, 1],
+        4
       );
     }
 
     // Crtaj sve čvorove
     for (const node of this.nodes) {
       if (node.type === "support_fixed") {
-        // Crtaj nepokretan oslonac (trougao + krug)
         const angle = node.angle || 0;
         this.renderer.drawFixedSupport(node.x, node.y, angle);
       } else if (node.type === "support_movable") {
-        // Crtaj pokretan oslonac (trougao + krug + linija)
         const angle = node.angle || 0;
         this.renderer.drawMovableSupport(node.x, node.y, angle);
       } else {
-        // Crtaj običan čvor kao krug
-        this.renderer.drawCircle(node.x, node.y, 6, [0.11, 0.08, 0.06, 1], 24); // shadcn stone-900
+        this.renderer.drawCircle(node.x, node.y, 6, [0.11, 0.08, 0.06, 1], 24);
       }
     }
 
@@ -497,7 +765,6 @@ class SimpleTrussApp {
 
         this.forceAngle = angle;
 
-        // Aktiviraj kliknuti ugao u podmeniju
         forceAngleBtns.forEach((b) => b.classList.remove("active"));
         btn.classList.add("active");
 
@@ -545,7 +812,6 @@ class SimpleTrussApp {
     const clickedNode = this.findNodeAt(x, y);
 
     if (clickedNode) {
-      // Dodaj silu na čvor (oslonac ili običan čvor)
       const force = {
         id: this.forces.length + 1,
         node: clickedNode,
@@ -553,12 +819,10 @@ class SimpleTrussApp {
         intensity: this.forceIntensity,
       };
 
-      // Proveri da li već postoji sila na ovom čvoru
       const existingForce = this.forces.find(
         (f) => f.node.id === clickedNode.id
       );
       if (existingForce) {
-        // Zameni postojeću silu
         existingForce.angle = this.forceAngle;
         existingForce.intensity = this.forceIntensity;
       } else {
@@ -571,8 +835,6 @@ class SimpleTrussApp {
       if (el) {
         el.textContent = `Sila postavljena na čvor ${clickedNode.id} | ${this.forceIntensity} @ ${this.forceAngle}°`;
       }
-
-      console.log("Dodata sila:", force);
     } else {
       const el = document.getElementById("coordText");
       if (el) {

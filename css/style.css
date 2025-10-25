@@ -164,6 +164,51 @@ header p {
   transform: translateY(0);
 }
 
+/* Materijalne karakteristike */
+.material-properties {
+  margin-top: 20px;
+  padding: 15px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.material-properties h3 {
+  margin: 0 0 15px 0;
+  color: var(--text-header);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.input-group {
+  margin-bottom: 12px;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  transition: border-color var(--transition-speed);
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(28, 25, 23, 0.1);
+}
+
 .support-submenu {
   margin-left: 20px;
   margin-top: -5px;
